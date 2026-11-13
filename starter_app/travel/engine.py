@@ -12,6 +12,7 @@ from typing import Any
 from .evidence import evidence
 from .rewards import equivalents
 from .transfer_quotes import RULES
+from .demo_rewards import attach_demo_redemptions
 
 DATA_FILE = Path(__file__).resolve().parent.parent / "data" / "sample_offers.json"
 CITY_AIRPORTS = {
@@ -163,7 +164,9 @@ def compare(query: dict[str, Any], flight_raw: list[dict], hotel_raw: list[dict]
     flights = sorted([price_flight(f, query) for f in flight_raw], key=lambda f: f["total_cash_usd"])
     hotels = sorted([price_hotel(h, query) for h in hotel_raw], key=lambda h: h["total_cash_usd"])
     for offer in flights + hotels:
+        offer.pop("demo_redemption", None)
         offer["points_payment"] = equivalents(offer, query)
+    attach_demo_redemptions(flights + hotels, query)
     lowest_flight, lowest_hotel = (flights[0] if flights else None), (hotels[0] if hotels else None)
     if selected:
         for kind, entries in (("flight", flights), ("hotel", hotels)):

@@ -1,5 +1,13 @@
 # Backend handoff for Nguyen
 
+## Automatic demo payment comparison
+
+Demo offers now expose `demo_redemption`: fictional airline/hotel award prices plus Chase and Amex transfer payment rows. UI shows cash, loyalty currency, and bank points after conversion automatically for each selected offer. Demo mode hides the manual quote calculator. Expand the transfer details for ratios, bonuses, rounding, leftovers and fees. The original fixture cash prices and generic award fields remain unchanged for compatibility.
+
+`data/demo_redemptions.json` defines fictional program-specific prices and invented promotions for Southwest, JetBlue and Hilton. The fixed demonstration calculation date is November 13, 2026. Promotions apply by that date, not travel date, and expire according to the fixture. They must NEVER be presented as current real offers. Routes use the existing US base rules; unsupported direct routes stay unavailable. AA and Frontier demo awards do not gain fictional bank transfer partnerships. Partner booking programs require separate quotes.
+
+`travel/demo_rewards.py` calculates party award points and cash fees including selected modeled bag charges. It rounds bank transfers upward to blocks and accounts for modeled Amex excise fees. No issuer wallet is pooled with another. The UI marks all quotes and bonuses as fictional. Live comparisons strip any inherited `demo_redemption` field before normalization; these fixtures never populate live award prices. Wallet balances are read from the rewards settings submitted with the search.
+
 ## Portal versus transfer quotes
 
 Expanded routes: Chase to Southwest, United, JetBlue, Aeroplan, British Airways and Flying Blue; Amex to Delta, JetBlue, Aeroplan, British Airways, Flying Blue, plus Hilton. US base rates only. Amex to JetBlue uses 250:200 blocks; other airline routes use 1,000:1,000. The search/selection response now includes `transfer_rules` so the frontend renders the same supported route catalog as the calculator. No direct Chase-to-Delta, Amex-to-United/Southwest, or AA/Frontier route is invented.
