@@ -10,6 +10,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 from .evidence import evidence
+from .rewards import equivalents
 
 DATA_FILE = Path(__file__).resolve().parent.parent / "data" / "sample_offers.json"
 CITY_AIRPORTS = {
@@ -88,11 +89,19 @@ def validate(request: dict[str, Any]) -> dict[str, Any]:
     for key in ("checked_bag", "carry_on"):
         if key in request and not isinstance(request[key], bool):
             raise ValueError(f"{key} must be true or false.")
+    wallets = {}
+    for bank in ("chase", "amex"):
+        balance = input_number(bank + "_balance", 0)
+        wallet_cpp = input_number(bank + "_value_cents", 1)
+        if not balance.is_integer() or not 0 <= balance <= 100000000 or not 0.1 <= wallet_cpp <= 10:
+            raise ValueError("Review your Chase and Amex balances and point values.")
+        wallets[bank + "_balance"] = int(balance)
+        wallets[bank + "_value_cents"] = wallet_cpp
     return {"origin": origin, "destination": destination, "depart_date": depart, "return_date": returning,
             "travelers": travelers, "mode": mode, "card_name": card_name,
             "card_multiplier": multiplier, "point_value_cents": cpp, "award_points_balance": points,
             "checked_bag": bool(request.get("checked_bag", False)),
-            "carry_on": bool(request.get("carry_on", True))}
+            "carry_on": bool(request.get("carry_on", True)), **wallets}
 
 
 def demo_offers(query: dict[str, Any]) -> tuple[list[dict], list[dict]]:
@@ -152,6 +161,8 @@ def price_hotel(offer: dict[str, Any], query: dict[str, Any]) -> dict[str, Any]:
 def compare(query: dict[str, Any], flight_raw: list[dict], hotel_raw: list[dict], warnings: list[str] | None = None, selected: dict | None = None) -> dict[str, Any]:
     flights = sorted([price_flight(f, query) for f in flight_raw], key=lambda f: f["total_cash_usd"])
     hotels = sorted([price_hotel(h, query) for h in hotel_raw], key=lambda h: h["total_cash_usd"])
+    for offer in flights + hotels:
+        offer["points_payment"] = equivalents(offer, query)
     lowest_flight, lowest_hotel = (flights[0] if flights else None), (hotels[0] if hotels else None)
     if selected:
         for kind, entries in (("flight", flights), ("hotel", hotels)):

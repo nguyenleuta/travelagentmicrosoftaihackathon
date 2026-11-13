@@ -29,6 +29,8 @@ const scenarios = {
   vegas:{origin:'DALLAS',destination:'LAS VEGAS',depart_date:'2027-05-20',return_date:'2027-05-23',travelers:2}
 };
 const getRequest = () => ({
+  chase_balance:Number(el('chaseBalance').value),amex_balance:Number(el('amexBalance').value),
+  chase_value_cents:Number(el('chaseValue').value),amex_value_cents:Number(el('amexValue').value),
   origin:el('origin').value.trim(),destination:el('destination').value.trim(),
   depart_date:el('departDate').value,return_date:el('returnDate').value,
   travelers:Number(el('travelers').value),mode:el('mode').value,
@@ -46,6 +48,15 @@ for(const button of document.querySelectorAll('[data-case]')){
   });
 }
 el('tripForm').addEventListener('submit',event=>{event.preventDefault();doSearch(true);});
+function pointsPaymentHtml(offer){
+  const p=offer.points_payment;
+  if(!p)return '';
+  const rows=p.cash_equivalents.map(o=>`<div><span>${safe(o.name)} value equivalent</span><b>${Number(o.points).toLocaleString()} pts</b></div>`).join('');
+  const details=p.cash_equivalents.map(o=>`<p>${safe(o.name)}: assumed ${safe(o.value_cents)}? per point. Balance: ${Number(o.balance).toLocaleString()}. ${o.shortfall?`Short by ${Number(o.shortfall).toLocaleString()} points at this value.`:'Balance covers this value estimate.'}</p>`).join('');
+  const award=p.award_points?`${Number(p.award_points).toLocaleString()} ${safe(p.award_program || 'loyalty points')} + ${p.award_fees_usd===null?'unknown fees':money(p.award_fees_usd)} (scenario; availability unverified)`:'Airline miles / hotel points: award quote unavailable.';
+  const transfers=p.transfers.map(t=>`<p><b>${Number(t.points).toLocaleString()} ${safe(t.name)} points ? ${Number(t.partner_points).toLocaleString()} ${safe(p.award_program)} points</b><br>${safe(t.ratio_label)}. ${Number(t.leftover_partner_points).toLocaleString()} partner points left over. ${t.shortfall?`Short by ${Number(t.shortfall).toLocaleString()} bank points.`:'Entered balance covers the transfer.'}<br>${safe(t.note)} ${safeLink(t.source_url,'Transfer source')} ? Checked ${safe(t.checked_date)}</p>`).join('');
+  return `<div class="points-prices">${rows}<small>Value estimates only ? not booking prices${completePrice(offer)?'':' ? excludes unknown fees'}</small><details><summary>Points & transfer details</summary>${details}<p>${award}</p>${transfers || '<p>No supported direct transfer calculation for this award program. Partner bookings require a separate award quote.</p>'}</details></div>`;
+}
 function offerHtml(offer,index,isHotel,mode){
   const selected=offer.id===(isHotel?lastResult.summary.hotel_offer_id:lastResult.summary.flight_offer_id);
   const title=isHotel?offer.name:`${offer.origin} → ${offer.destination} · ${offer.carrier}`;
@@ -59,7 +70,7 @@ function offerHtml(offer,index,isHotel,mode){
     `Modeled fees included. Estimated cash rewards: ${Number(offer.reward_points_earned||0).toLocaleString()} points`;
   const dates=isHotel?`${offer.checkin || ''} → ${offer.checkout || ''}`:`${offer.depart_date || ''} → ${offer.return_date || ''}`;
   const bags=isHotel?'':`<p class="offer-detail">Carry-on: ${safe(bagLabel(offer,'carry_on_included','carry_on_per_traveler_usd'))} · Checked bag: ${safe(bagLabel(offer,'checked_bag_included','checked_bag_per_traveler_usd'))}</p>`;
-  return `<article data-offer-id="${safe(offer.id)}" data-kind="${isHotel?'hotel':'flight'}" class="offer ${selected?'offer-best':''}"><div class="offer-top"><div><h4>${safe(title)}</h4><div class="sourceline">${safe(offer.source)}</div></div><div class="cost">${money(offer.total_cash_usd)}<small>${completePrice(offer)?'modeled total':'known estimate'} · ${isHotel?'full stay':'all travelers'}</small></div></div><div class="tags"><span class="tag fake">${mode==='demo'?'SYNTHETIC TEST PRICE':'UNVERIFIED LIVE SEARCH'}</span><span class="tag">${safe(details)}</span><span class="tag">${selected?'Selected for trip':'Click to choose'}</span></div><div class="sourceline">${safe(dates)}</div><button type="button" class="choose-offer" data-choose="${safe(offer.id)}" aria-pressed="${selected}">${selected?'Selected':isHotel?'Choose hotel':'Choose flight'}</button><details class="card-details"><summary>View trip details, fees & points</summary><div class="sourceline">${meta}</div>${bags}${award}${evidenceHtml(offer)}<div class="offer-foot"><span>${safe(completeness)}</span><span>${safe(timeLabel)} · ${safe(offer.verification?.label || 'Not checkout verified')}</span></div></details></article>`;
+  return `<article data-offer-id="${safe(offer.id)}" data-kind="${isHotel?'hotel':'flight'}" class="offer ${selected?'offer-best':''}"><div class="offer-top"><div><h4>${safe(title)}</h4><div class="sourceline">${safe(offer.source)}</div></div><div class="cost">${money(offer.total_cash_usd)}<small>${completePrice(offer)?'modeled total':'known estimate'} · ${isHotel?'full stay':'all travelers'}</small></div></div><div class="tags"><span class="tag fake">${mode==='demo'?'SYNTHETIC TEST PRICE':'UNVERIFIED LIVE SEARCH'}</span><span class="tag">${safe(details)}</span><span class="tag">${selected?'Selected for trip':'Click to choose'}</span></div><div class="sourceline">${safe(dates)}</div>${pointsPaymentHtml(offer)}<button type="button" class="choose-offer" data-choose="${safe(offer.id)}" aria-pressed="${selected}">${selected?'Selected':isHotel?'Choose hotel':'Choose flight'}</button><details class="card-details"><summary>View trip details, fees & points</summary><div class="sourceline">${meta}</div>${bags}${award}${evidenceHtml(offer)}<div class="offer-foot"><span>${safe(completeness)}</span><span>${safe(timeLabel)} · ${safe(offer.verification?.label || 'Not checkout verified')}</span></div></details></article>`;
 }
 function render(data){
   lastResult=data;
@@ -75,12 +86,15 @@ function render(data){
   el('hotelCount').textContent=`${data.hotels.length} result(s)`;
   el('flights').innerHTML=data.flights.length?data.flights.map((o,i)=>offerHtml(o,i,false,mode)).join(''):'<div class="empty">No matching flights. Demo fixtures cover the three scenario buttons; try a sample or connect live search.</div>';
   el('hotels').innerHTML=data.hotels.length?data.hotels.map((o,i)=>offerHtml(o,i,true,mode)).join(''):'<div class="empty">No matching hotels. Demo fixtures cover the three scenario buttons; try a sample or connect live search.</div>';
+  const chosenFlight=data.flights.find(o=>o.id===summary.flight_offer_id);
+  const chosenHotel=data.hotels.find(o=>o.id===summary.hotel_offer_id);
+  const walletView=[chosenFlight,chosenHotel].filter(Boolean).map(o=>`<div><h4>${safe(o.name || o.carrier || o.id)}</h4>${pointsPaymentHtml(o)}</div>`).join('');
   const a=summary.comparison_illustrative_award || summary.best_illustrative_award;
   const savings=a?Number(a.economic_savings_usd):null;
   const verdict=a?(savings>0?`Points offer better modeled value by ${money(savings)}.`:savings<0?`Cash offers better modeled value by ${money(-savings)}.`:'Cash and points have equal modeled value.'):'No eligible points scenario to compare.';
   const unavailable=!hasTrip?'A complete trip price is needed before comparing points.':'No affordable points option with complete fee information was returned.';
   const comparison=`<div class="payment-comparison"><div><small>PAY CASH</small><strong>${hasTrip?money(summary.modeled_trip_cash_usd):hasKnown?money(summary.known_trip_cash_usd):'Not available'}</strong><p>${hasTrip?'Flight + hotel cash outlay':hasKnown?'Known estimate — required fees unknown':'Flight or hotel results missing'}</p></div><div><small>ONE AWARD + CASH · SCENARIO ONLY</small><strong>${a?money(a.trip_cash_outlay_usd):'Not available'}</strong><p>${a?`Plus ${Number(a.points).toLocaleString()} points<br>Value of points used: ${money(Number(a.points)*data.query.point_value_cents/100)}<br>Total economic cost: <b>${money(a.trip_economic_cost_usd)}</b><br>${safe(a.kind)} award: ${safe(a.offer_id)}`:safe(unavailable)}</p></div></div><p><strong>${safe(verdict)}</strong></p>${a?'<p>Economic cost = cash paid + your value of points used. Availability and program eligibility are unverified.</p>':''}`;
-  el('recommendations').innerHTML=`<div class="reco-box"><h3>Your cash-versus-points comparison</h3>${comparison}<details class="reasoning-details"><summary>How we compared these options</summary>${summary.recommendations.map(s=>`<p>${safe(s)}</p>`).join('') || '<p>No recommendation available. Try another search.</p>'}</details><p><strong>Before booking:</strong> Verify exact flights, room conditions, required fees, and award availability with the provider.</p></div>`;
+  el('recommendations').innerHTML=`<div class="reco-box"><h3>Your cash-versus-points comparison</h3>${comparison}<details class="wallet-comparison"><summary>Compare Chase, Amex & loyalty points for your selections</summary>${walletView}<p>Each balance is separate. Estimates on two cards do not confirm your wallet can pay for both.</p></details><details class="reasoning-details"><summary>How we compared these options</summary>${summary.recommendations.map(s=>`<p>${safe(s)}</p>`).join('') || '<p>No recommendation available. Try another search.</p>'}</details><p><strong>Before booking:</strong> Verify exact flights, room conditions, required fees, and award availability with the provider.</p></div>`;
 
 }
 async function chooseOffer(kind,id){

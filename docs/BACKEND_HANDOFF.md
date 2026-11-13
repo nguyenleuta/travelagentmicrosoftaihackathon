@@ -1,5 +1,17 @@
 # Backend handoff for Nguyen
 
+## Chase and Amex wallet placeholders
+
+Search and compare accept `chase_balance`, `amex_balance` (nonnegative integers), `chase_value_cents`, `amex_value_cents` (0.1–10). Defaults: zero balances and example valuations of 1 cent. These values are separate from the existing generic award scenario balance.
+
+Offers expose `points_payment.cash_equivalents`: cash USD × 100 / subjective cents per point, rounded up. These are value equivalents, never portal redemption rates or award booking prices. Incomplete cash prices produce incomplete value estimates. The UI displays this distinction on each card and in the selected-offer comparison. Each balance is evaluated separately, and card coverage does not claim enough balance for the whole trip.
+
+`points_payment.award_points` requires an actual normalized award field. No award is inferred from carrier name, hotel name, or cash price. `award_program` must identify the loyalty currency explicitly.
+
+First supported transfer scenario: Amex Membership Rewards to Hilton Honors, US base ratio 1,000:2,000, rounded to 1,000-bank-point increments; no promotional bonus. Official reference: https://global.americanexpress.com/rewards/transfer?partner=5629f189e4b0b3d3bd79cc4f (checked November 13, 2026). Account eligibility and fees still require confirmation. Rule data lives in `travel/rewards.py`. No Chase routes or AA/Frontier transfer routes are assumed. Unsupported routes show unavailable rather than 1:1.
+
+For actual transfer display, supply `award_program="Hilton Honors"`, `award_points_total` and `award_taxes_usd` for a hotel quote. Fees/availability remain subject to existing evidence rules. Synthetic Demo Hotel Points are a different currency and do not use real Hilton rules. Existing provider files were not changed.
+
 Implemented in Johnny's backend branch. Existing request fields and response sections stay in place.
 
 ## Price fields
