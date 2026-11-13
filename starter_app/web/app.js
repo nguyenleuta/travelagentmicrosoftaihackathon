@@ -67,7 +67,10 @@ function liveEstimateHtml(offer){
 }
 function pointsPaymentHtml(offer){
   if(offer.demo_redemption)return demoPaymentsHtml(offer);
-  if(offer.cash_points_estimate)return `<p class="demo-card-hint">Estimated loyalty points: ${Number(offer.cash_points_estimate.points).toLocaleString()} (1 cent per point; not an award quote). Select to compare Chase and Amex.</p>`;
+  if(offer.cash_points_estimate){
+    const estimate=offer.cash_points_estimate;
+    return `<div class="points-prices"><div><span>${safe(estimate.program || 'Loyalty points')}:</span><b>${Number(estimate.points).toLocaleString()} pts</b></div>${estimate.payments.map(p=>`<div><span>${p.bank==='amex'?'AMEX':'Chase'} points:</span><b>${p.supported?`${Number(p.points).toLocaleString()} pts`:'Unavailable'}</b></div>`).join('')}<small>Estimated from cash at 1 cent per loyalty point. Not an award quote; additional fees may apply.</small></div>`;
+  }
   const p=offer.points_payment;
   if(!p)return '';
   const rows=p.cash_equivalents.map(o=>`<div><span>${safe(o.name)} value equivalent</span><b>${Number(o.points).toLocaleString()} pts</b></div>`).join('');
