@@ -49,6 +49,7 @@ for(const button of document.querySelectorAll('[data-case]')){
     doSearch();
   });
 }
+el('recommendPoints').addEventListener('click',recommendPoints);
 el('tripForm').addEventListener('submit',event=>{event.preventDefault();doSearch(true);});
 function demoPaymentsHtml(offer,expanded=false){
   const d=offer.demo_redemption;
@@ -187,8 +188,9 @@ function render(data){
   const totalLabel=hasTrip?money(summary.modeled_trip_cash_usd):hasKnown?money(summary.known_trip_cash_usd):'Incomplete trip';
   const totalNote=hasTrip?(summary.selection_mode==='manual'?'Your selected flight + hotel • USD':'Lowest modeled cash flight + hotel • USD'):hasKnown?'Known flight + hotel estimate. Required fees are unknown.':'One or both parts of the trip are missing';
   el('summary').innerHTML='';
-  const visibleFlights=data.flights.slice(0,5);
-  const visibleHotels=data.hotels.slice(0,5);
+  const keepSelected=(items,id)=>{const chosen=items.find(o=>o.id===id);return chosen?[chosen,...items.filter(o=>o.id!==id)].slice(0,5):items.slice(0,5);};
+  const visibleFlights=keepSelected(data.flights,summary.flight_offer_id);
+  const visibleHotels=keepSelected(data.hotels,summary.hotel_offer_id);
   el('flightCount').textContent=`${visibleFlights.length} result(s)${data.flights.length>5?' · Top 5 by known price':''}`;
   el('hotelCount').textContent=`${visibleHotels.length} result(s)${data.hotels.length>5?' · Top 5 by known price':''}`;
   el('flights').innerHTML=visibleFlights.length?visibleFlights.map((o,i)=>offerHtml(o,i,false,mode)).join(''):'<div class="empty">No matching flights. Demo fixtures cover the three scenario buttons; try a sample or connect live search.</div>';
@@ -208,11 +210,24 @@ function render(data){
 
   }
 }
-async function chooseOffer(kind,id){
+function recommendPoints(){
+  if(!lastResult)return;
+  const bank=el('recommendBank').value;
+  const score=o=>{
+    const payment=(o.demo_redemption?.payments || o.cash_points_estimate?.payments || []).find(p=>p.bank===bank && p.supported);
+    return payment?(payment.bank_points ?? payment.points):Infinity;
+  };
+  const best=items=>items.filter(o=>Number.isFinite(score(o))).sort((a,b)=>score(a)-score(b)||a.total_cash_usd-b.total_cash_usd)[0];
+  const flight=best(lastResult.flights),hotel=best(lastResult.hotels);
+  if(!flight && !hotel){el('status').textContent='No supported points options for this bank. Try another bank.';return;}
+  const selected={flight:flight?.id || lastResult.summary.flight_offer_id,hotel:hotel?.id || lastResult.summary.hotel_offer_id};
+  chooseOffer(flight?'flight':'hotel',flight?.id || hotel.id,selected,`Lowest ${bank==='amex'?'Amex':'Chase'} points options selected. ${!flight?'No supported flight transfer. ':''}${!hotel?'No supported hotel transfer. ':''}Compare cash fees and check your balance before booking.`);
+}
+async function chooseOffer(kind,id,overrides=null,successMessage=null){
   if(!lastResult)return;
   const version=++searchVersion;
   const data=lastResult;
-  const selected={flight:data.summary.flight_offer_id,hotel:data.summary.hotel_offer_id,[kind]:id};
+  const selected=overrides || {flight:data.summary.flight_offer_id,hotel:data.summary.hotel_offer_id,[kind]:id};
   el('status').textContent='Updating your trip…';
   try{
     const response=await fetch('/api/compare',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:data.query,flights:data.flights,hotels:data.hotels,selected})});
@@ -222,7 +237,7 @@ async function chooseOffer(kind,id){
     if(!response.ok)throw new Error(payload.error || 'Could not update selection');
     payload.warnings=data.warnings;
     render(payload);
-    el('status').textContent='Trip updated. Total and points comparison reflect your selection.';
+    el('status').textContent=successMessage || 'Trip updated. Total and points comparison reflect your selection.';
   }catch(error){if(version===searchVersion)el('status').textContent=error.message;}
   finally{if(version===searchVersion){el('searchButton').disabled=false;el('results').setAttribute('aria-busy','false');}}
 }
