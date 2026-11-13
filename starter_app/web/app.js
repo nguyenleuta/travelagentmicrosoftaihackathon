@@ -69,7 +69,7 @@ function render(data){
   const hasTrip=typeof summary.modeled_trip_cash_usd==='number';
   const hasKnown=typeof summary.known_trip_cash_usd==='number';
   const totalLabel=hasTrip?money(summary.modeled_trip_cash_usd):hasKnown?money(summary.known_trip_cash_usd):'Incomplete trip';
-  const totalNote=hasTrip?'Lowest modeled cash flight + hotel • USD':hasKnown?'Known flight + hotel estimate. Required fees are unknown.':'One or both parts of the trip are missing';
+  const totalNote=hasTrip?(summary.selection_mode==='manual'?'Your selected flight + hotel • USD':'Lowest modeled cash flight + hotel • USD'):hasKnown?'Known flight + hotel estimate. Required fees are unknown.':'One or both parts of the trip are missing';
   el('summary').innerHTML=`<div class="trip-summary"><div><small>${mode==='demo'?'FICTIONAL TEST TOTAL':'UNVERIFIED LIVE ESTIMATE'}</small><strong>${totalLabel}</strong><p>${safe(totalNote)}</p><p>${safe(data.query.origin)} → ${safe(data.query.destination)} · ${safe(data.query.travelers)} traveler(s)</p></div><div class="summary-note"><small>ILLUSTRATIVE CARD REWARDS</small><strong>${Number(summary.modeled_points_earned_if_cash||0).toLocaleString()} pts</strong><p>Assumed ${safe(data.query.card_multiplier)} points / $1. Estimated value: ${money(Number(summary.modeled_points_earned_if_cash||0)*data.query.point_value_cents/100)}. This is not a cash discount.</p></div></div>`;
   el('flightCount').textContent=`${data.flights.length} result(s)`;
   el('hotelCount').textContent=`${data.hotels.length} result(s)`;
@@ -88,9 +88,10 @@ async function chooseOffer(kind,id){
   const version=++searchVersion;
   const data=lastResult;
   const selected={flight:data.summary.flight_offer_id,hotel:data.summary.hotel_offer_id,[kind]:id};
-  el('status').textContent='Updating your trip?';
+  el('status').textContent='Updating your trip…';
   try{
     const response=await fetch('/api/compare',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:data.query,flights:data.flights,hotels:data.hotels,selected})});
+    if(response.status===404)throw new Error('Restart the Python server to enable flight and hotel selection, then refresh this page.');
     const payload=await response.json();
     if(version!==searchVersion)return;
     if(!response.ok)throw new Error(payload.error || 'Could not update selection');
