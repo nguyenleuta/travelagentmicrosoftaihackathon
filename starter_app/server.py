@@ -9,6 +9,7 @@ from urllib.parse import unquote, urlsplit
 
 from travel.engine import compare, demo_offers, validate
 from travel.providers import live_offers
+from travel.transfer_quotes import compare_quotes
 
 ROOT = Path(__file__).resolve().parent
 WEB = ROOT / "web"
@@ -57,13 +58,15 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(content)
 
     def do_POST(self) -> None:
-        if self.path not in {"/api/search", "/api/compare"}:
+        if self.path not in {"/api/search", "/api/compare", "/api/rewards-quote"}:
             return self._json(404, {"error": "Not found"})
         try:
             length = int(self.headers.get("Content-Length", "0"))
             if length <= 0 or length > (200000 if self.path == "/api/compare" else 20000):
                 raise ValueError("Invalid request size")
             supplied = json.loads(self.rfile.read(length).decode("utf-8"))
+            if self.path == "/api/rewards-quote":
+                return self._json(200, compare_quotes(supplied))
             if self.path == "/api/compare":
                 if not isinstance(supplied, dict):
                     raise ValueError("Provide a JSON object.")

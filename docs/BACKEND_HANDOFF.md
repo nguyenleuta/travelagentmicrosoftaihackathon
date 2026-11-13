@@ -1,5 +1,15 @@
 # Backend handoff for Nguyen
 
+## Portal versus transfer quotes
+
+The comparison panel now has an expandable quote calculator. `/api/rewards-quote` compares user-entered bank portal and partner award quotes using Chase → Southwest (1:1) or Amex → Hilton (1:2), with minimum 1,000-bank-point blocks. No quote is derived from a cash fare or subjective valuation. Chase issuer source: https://www.chase.com/personal/credit-cards/education/basics/how-to-transfer-chase-ultimate-rewards-points . Southwest ratio corroboration: https://thepointsguy.com/loyalty-programs/transfer-chase-ultimate-rewards-southwest . Rules checked November 13, 2026. These are maintained base rules, not a live account-specific feed.
+
+The form takes the selected offer ID, portal points, award points, portal and award cash fees, transfer fees, existing partner balance and its personal valuation. Bank balance and valuation come from the last search. It shows bank points spent, cash paid, economic costs, balance shortfalls, transfer rounding and leftovers. Existing partner points are valued separately and are not treated as free. Fee fields require explicit input; blank does not mean zero. No promotional bonus is assumed.
+
+Quotes remain user-entered and unverified even when the user checks matching-trip and eligibility confirmations. A different selection or search clears the calculator and its result to avoid attaching an old quote to a new offer. The form is independent of the main automatic cash/scenario summary. It performs no bookings or point transfers.
+
+Automatic prices still require authorized bank portal and airline/hotel award data sources. The existing live cash adapter does not supply those quotes. Future connectors can populate the same calculator inputs with precise matching itinerary/room evidence.
+
 ## Chase and Amex wallet placeholders
 
 Search and compare accept `chase_balance`, `amex_balance` (nonnegative integers), `chase_value_cents`, `amex_value_cents` (0.1–10). Defaults: zero balances and example valuations of 1 cent. These values are separate from the existing generic award scenario balance.

@@ -25,6 +25,13 @@ class ServerTests(unittest.TestCase):
         with urlopen(self.base + "/api/health", timeout=5) as resp:
             self.assertTrue(json.load(resp)["ok"])
 
+    def test_rewards_quote_endpoint(self):
+        from test_transfer_quotes import BASE
+        req = Request(self.base + "/api/rewards-quote", data=json.dumps(BASE).encode(), headers={"Content-Type":"application/json"})
+        with urlopen(req, timeout=5) as resp:
+            result = json.load(resp)
+        self.assertEqual(result["bank_points_difference"],7500)
+
     def test_selection_recalculates_without_provider_calls(self):
         from travel.engine import validate, demo_offers
         from unittest.mock import patch
