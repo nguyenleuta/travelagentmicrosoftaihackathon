@@ -9,6 +9,7 @@ import json
 from datetime import date
 from pathlib import Path
 from typing import Any
+from .evidence import evidence
 
 DATA_FILE = Path(__file__).resolve().parent.parent / "data" / "sample_offers.json"
 CITY_AIRPORTS = {
@@ -112,40 +113,17 @@ def demo_offers(query: dict[str, Any]) -> tuple[list[dict], list[dict]]:
 
 def price_evidence(offer: dict, query: dict, hotel: bool = False) -> dict:
     """Keep missing charges distinct from a confirmed zero-dollar charge."""
-    unknown = list(offer.get("unknown_fee_categories") or [])
-    fields = [("stay_rate_usd", "stay rate"), ("mandatory_fees_usd", "hotel mandatory fees")] if hotel else [
-        ("base_per_traveler_usd", "base fare"), ("mandatory_per_traveler_usd", "flight mandatory fees")]
-    if not hotel:
-        for flag, included, amount, label in (
-            ("carry_on", "carry_on_included", "carry_on_per_traveler_usd", "carry-on fees"),
-            ("checked_bag", "checked_bag_included", "checked_bag_per_traveler_usd", "checked bag fees"),
-        ):
-            if query[flag] and offer.get(included) is not True:
-                fields.append((amount, label))
-                if offer.get("fees_incomplete") and offer.get(included) is None:
-                    unknown.append(label)
-    for field, label in fields:
-        if isinstance(offer.get(field), bool) or number(offer.get(field), -1) < 0:
-            unknown.append(label)
-    if offer.get("fees_incomplete") or offer.get("price_complete") is False:
-        unknown.append("unconfirmed mandatory charges")
-    unknown = list(dict.fromkeys(unknown))
-    return {"price_complete": not unknown, "unknown_fee_categories": unknown,
-            "fees_incomplete": bool(unknown)}
+    return evidence(offer, query, hotel)
 
 
 def price_flight(offer: dict[str, Any], query: dict[str, Any]) -> dict[str, Any]:
     travelers = query["travelers"]
-    per_person = number(offer.get("base_per_traveler_usd")) + number(offer.get("mandatory_per_traveler_usd"))
-    if query["checked_bag"] and not offer.get("checked_bag_included", False):
-        per_person += number(offer.get("checked_bag_per_traveler_usd"))
-    if query["carry_on"] and not offer.get("carry_on_included", False):
-        per_person += number(offer.get("carry_on_per_traveler_usd"))
-    total = round(per_person * travelers, 2)
     points = int(number(offer.get("award_points_per_traveler", 0)) * travelers)
     award_fees = round(number(offer.get("award_taxes_per_traveler_usd")) * travelers, 2)
-    enriched = dict(offer, total_cash_usd=total, points_required=points, award_fees_usd=award_fees)
+    enriched = dict(offer, points_required=points, award_fees_usd=award_fees)
     enriched.update(price_evidence(offer, query))
+    total = enriched["price_breakdown"]["known_total_usd"]
+    enriched["total_cash_usd"] = total
     enriched["award_price_complete"] = bool(points and enriched["price_complete"] and
         number(offer.get("award_taxes_per_traveler_usd"), -1) >= 0)
     enriched["reward_points_earned"] = int(total * query["card_multiplier"])
@@ -156,11 +134,12 @@ def price_flight(offer: dict[str, Any], query: dict[str, Any]) -> dict[str, Any]
 
 
 def price_hotel(offer: dict[str, Any], query: dict[str, Any]) -> dict[str, Any]:
-    total = round(number(offer.get("stay_rate_usd")) + number(offer.get("mandatory_fees_usd")), 2)
     points = int(number(offer.get("award_points_total", 0)))
     fees = round(number(offer.get("award_taxes_usd")), 2)
-    enriched = dict(offer, total_cash_usd=total, points_required=points, award_fees_usd=fees)
+    enriched = dict(offer, points_required=points, award_fees_usd=fees)
     enriched.update(price_evidence(offer, query, hotel=True))
+    total = enriched["price_breakdown"]["known_total_usd"]
+    enriched["total_cash_usd"] = total
     enriched["award_price_complete"] = bool(points and enriched["price_complete"] and
         number(offer.get("award_taxes_usd"), -1) >= 0)
     enriched["reward_points_earned"] = int(total * query["card_multiplier"])

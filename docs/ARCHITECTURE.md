@@ -35,7 +35,7 @@ Browser: visible results, warnings, recommendations
 ## Data contracts
 An offer must not just be `{name, price}`. For production, define explicit fields for: quote ID, provider, precise flight segments / fare class / room ID, party size, currency, base fare, taxes, mandatory fees, luggage, booking channel, cancellation policy, timestamp, deep booking link, verification level, evidence and exceptions.
 
-The starter's demo models use `base_per_traveler_usd`, `mandatory_per_traveler_usd`, and baggage costs for flights, and `stay_rate_usd`, `mandatory_fees_usd` for hotels. **Live adapter models unknown fees as zero mathematically, but flags `fees_incomplete=true`; no "guaranteed cheapest" claim is justified by its total.** This is an intentional exercise for teams to fix.
+The demo models use `base_per_traveler_usd`, `mandatory_per_traveler_usd`, and baggage costs for flights, and `stay_rate_usd`, `mandatory_fees_usd` for hotels. `travel/evidence.py` produces a shared price breakdown for calculation and display. Missing fees are null; legacy zero fee placeholders flagged incomplete are shown as unknown. Known totals are partial estimates until every required amount is known. Source panels and JSON exports preserve the provider's observation time and unverified status; they do not establish checkout verification.
 
 ## Recommended future improvements
 - Quote expiry and re-query; provider-specific booking and award adapters.

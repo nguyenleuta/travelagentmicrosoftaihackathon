@@ -49,7 +49,7 @@ class EngineTests(unittest.TestCase):
         q = validate({**BASE, "checked_bag": True})
         f, _ = demo_offers(q)
         offer = {**f[0], "checked_bag_included": False, "checked_bag_per_traveler_usd": None}
-        self.assertIn("checked bag fees", price_flight(offer, q)["unknown_fee_categories"])
+        self.assertIn("Checked bags", price_flight(offer, q)["unknown_fee_categories"])
         offer["checked_bag_included"] = True
         self.assertTrue(price_flight(offer, q)["price_complete"])
 
@@ -58,7 +58,7 @@ class EngineTests(unittest.TestCase):
         _, h = demo_offers(q)
         quote = price_hotel({**h[0], "mandatory_fees_usd": None}, q)
         self.assertFalse(quote["price_complete"])
-        self.assertIn("hotel mandatory fees", quote["unknown_fee_categories"])
+        self.assertIn("Mandatory hotel taxes and fees", quote["unknown_fee_categories"])
 
     def test_missing_component_has_no_trip_total(self):
         q = validate(BASE)

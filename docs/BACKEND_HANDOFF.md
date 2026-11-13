@@ -4,6 +4,10 @@ Implemented in Johnny's backend branch. Existing request fields and response sec
 
 ## Price fields
 
+Each offer also contains `price_breakdown` (USD, party/stay basis, component amounts and known total) and `verification` (source, observed time, links, status and remaining checks). Missing amounts are null; unselected bags have `not_selected` status and zero cost; included bags have `included` status. Legacy zero placeholders under `fees_incomplete=true` display as unknown. Totals are calculated from the same components shown in the UI.
+
+The frontend has expandable price/source panels and a JSON evidence download. The download captures the search result, not proof of checkout verification. `verification.status` stays synthetic or unverified; this version has no trusted checkout evidence ingestion. Provider observation time is never replaced with export time. Safe provider-supplied web links are shown; missing links stay missing.
+
 - Each offer now has `price_complete` and `unknown_fee_categories`.
 - `fees_incomplete` is set when required amounts are missing or the provider flags incomplete coverage.
 - `total_cash_usd` remains the known modeled amount. It is not a confirmed all-in amount when `price_complete` is false.
@@ -34,3 +38,5 @@ Johnny has also updated `starter_app/web/app.js` and `styles.css` while Nguyen h
 ## Verification
 
 Run `python scripts/portability_check.py` from the repo root. Regression cases cover missing fees, selected baggage, missing trip components, award baseline errors, missing award taxes, and insufficient points.
+
+Optional frontend checks (Node.js needed only for these tests): `node starter_app/tests/frontend.test.cjs`. These check rendered unknown amounts, unsafe source text/links, losing award comparisons, and the JSON download. Python checks also cover breakdown arithmetic and verification status.
