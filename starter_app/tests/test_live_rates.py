@@ -24,6 +24,16 @@ class LiveRateTests(unittest.TestCase):
         for text in ("Book JetBlue flights", "250 Points = 250 TrueBlue points", "250 Points = 200 TrueBlue points with a promotion"):
             self.assertEqual(self.check(text)["status"],"rate_not_confirmed")
 
+    def test_unconfirmed_lookup_still_calculates_labeled_stored_estimate(self):
+        r=self.check("Read about JetBlue travel")
+        self.assertEqual(r["status"],"rate_not_confirmed")
+        self.assertEqual(r["conversion"]["bank_points"],25000)
+        self.assertEqual(r["conversion"]["rate_basis"],"stored_base_rate_unconfirmed_live")
+
+    def test_prose_ratio_is_recognized(self):
+        r=self.check("250 Membership Rewards points = 200 TrueBlue points")
+        self.assertEqual(r["status"],"ratio_supported_by_official_search_excerpt")
+
     def test_rounding_and_bad_award_input(self):
         r=self.check("250 Points = 200 TrueBlue points",award_points=20001)
         self.assertEqual(r["conversion"]["bank_points"],25250)

@@ -38,7 +38,7 @@ def check_rate(data):
     from math import gcd
     common = gcd(a, b)
     ratios = {(a,b),(a//common,b//common)}
-    patterns = [rf'(?<![\d.]){x}\s*(?::|to|=|points?\s*=)\s*{y}(?![\d.])' for x,y in ratios]
+    patterns = [rf'(?<![\d.]){x}[\w\s®™]{{0,45}}?(?::|to|=|equals|becomes?)\s*{y}(?![\d.])' for x,y in ratios]
     aliases = {"chase_jetblue":"jetblue", "amex_jetblue":"trueblue", "chase_hyatt":"hyatt"}
     partner = aliases.get(data["route"], rule["partner"].split()[0].lower())
     sources, matched = [], []
@@ -58,10 +58,11 @@ def check_rate(data):
         if bank_named and partner in text.lower() and not re.search(r'bonus|promotion|\bexpired\b', text, re.I) and any(re.search(p,text.replace(",",""),re.I) for p in patterns):
             matched.append(evidence)
     converted = None
-    if matched and award:
+    if award:
         blocks = int((Decimal(award)/b).to_integral_value(rounding=ROUND_CEILING))
-        converted = {"bank_points":blocks*a,"partner_points":blocks*b,"leftover":blocks*b-award}
+        converted = {"bank_points":blocks*a,"partner_points":blocks*b,"leftover":blocks*b-award,
+                     "rate_basis":"official_search_excerpt" if matched else "stored_base_rate_unconfirmed_live"}
     return {"rule":rule,"observed_utc":datetime.now(timezone.utc).isoformat(),
         "status":"ratio_supported_by_official_search_excerpt" if matched else "rate_not_confirmed",
         "sources":matched or sources[:4], "award_points":award,"conversion":converted,
-        "note":"SerpApi retrieved public search excerpts. Open the source to confirm current US terms and card eligibility. No promotional bonus applied. Airline/hotel award points are user-entered, not fetched or availability-verified. Cash taxes and transfer fees are additional."}
+        "note":"The calculator uses the stored base ratio when the search does not confirm it. That fallback is not live verification. Open the issuer source to confirm current US terms and card eligibility. No promotional bonus applied. Airline/hotel award points are user-entered, not fetched or availability-verified. Cash taxes and transfer fees are additional."}

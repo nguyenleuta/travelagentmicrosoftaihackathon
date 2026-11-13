@@ -1,5 +1,9 @@
 # Backend handoff for Nguyen
 
+## Rate lookup fallback fix
+
+The live rate checker no longer blocks all calculation when an official search excerpt is missing. It returns a conversion using the maintained base rule, explicitly labeled `stored_base_rate_unconfirmed_live`; search status remains unconfirmed. The UI shows the stored ratio and issuer link and never relabels fallback math as a live-confirmed rate. With no input points, it shows the ratio only. Parser matching now accepts prose such as “250 Membership Rewards points = 200 TrueBlue points.” For Amex to Hilton, requesting 1,000 Hilton points requires a minimum 1,000-bank-point transfer, producing 2,000 Hilton points with 1,000 left over.
+
 ## Cash-based points fallback in Live mode
 
 At the user's request, when no normalized award price is available, `cash_points_estimate` now supplies an explicitly hypothetical planning comparison: known cash USD × 100 = airline/hotel points at an assumed 1 cent per partner point. This is not sourced award inventory. Recognized carrier/property names map to a program solely for estimating a direct transfer; the mapping does not establish an award quote. Unknown programs or unsupported routes do not get fabricated bank conversions.
