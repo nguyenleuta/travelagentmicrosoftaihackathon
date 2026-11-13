@@ -184,10 +184,12 @@ function render(data){
   const totalLabel=hasTrip?money(summary.modeled_trip_cash_usd):hasKnown?money(summary.known_trip_cash_usd):'Incomplete trip';
   const totalNote=hasTrip?(summary.selection_mode==='manual'?'Your selected flight + hotel • USD':'Lowest modeled cash flight + hotel • USD'):hasKnown?'Known flight + hotel estimate. Required fees are unknown.':'One or both parts of the trip are missing';
   el('summary').innerHTML='';
-  el('flightCount').textContent=`${data.flights.length} result(s)`;
-  el('hotelCount').textContent=`${data.hotels.length} result(s)`;
-  el('flights').innerHTML=data.flights.length?data.flights.map((o,i)=>offerHtml(o,i,false,mode)).join(''):'<div class="empty">No matching flights. Demo fixtures cover the three scenario buttons; try a sample or connect live search.</div>';
-  el('hotels').innerHTML=data.hotels.length?data.hotels.map((o,i)=>offerHtml(o,i,true,mode)).join(''):'<div class="empty">No matching hotels. Demo fixtures cover the three scenario buttons; try a sample or connect live search.</div>';
+  const visibleFlights=data.flights.slice(0,5);
+  const visibleHotels=data.hotels.slice(0,5);
+  el('flightCount').textContent=`${visibleFlights.length} result(s)${data.flights.length>5?' · Top 5 by known price':''}`;
+  el('hotelCount').textContent=`${visibleHotels.length} result(s)${data.hotels.length>5?' · Top 5 by known price':''}`;
+  el('flights').innerHTML=visibleFlights.length?visibleFlights.map((o,i)=>offerHtml(o,i,false,mode)).join(''):'<div class="empty">No matching flights. Demo fixtures cover the three scenario buttons; try a sample or connect live search.</div>';
+  el('hotels').innerHTML=visibleHotels.length?visibleHotels.map((o,i)=>offerHtml(o,i,true,mode)).join(''):'<div class="empty">No matching hotels. Demo fixtures cover the three scenario buttons; try a sample or connect live search.</div>';
   const chosenFlight=data.flights.find(o=>o.id===summary.flight_offer_id);
   const chosenHotel=data.hotels.find(o=>o.id===summary.hotel_offer_id);
   const a=summary.comparison_illustrative_award || summary.best_illustrative_award;
