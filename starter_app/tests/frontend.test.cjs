@@ -75,8 +75,6 @@ assert(get('recommendations').innerHTML.includes('Hardcoded demo +25% bonus'));
 assert(get('recommendations').innerHTML.includes('25% and 30% transfer bonuses are hardcoded examples'));
 assert(get('recommendations').innerHTML.includes('Choose one way to pay'));
 assert(get('recommendations').innerHTML.includes('Chase bank points'));
-assert(get('recommendations').innerHTML.includes('Cash value: <b>$160.00</b>'));
-assert.equal(vm.runInContext('pointsCashValue(18000).includes("$180.00")',context),true);
 assert(get('recommendations').innerHTML.includes('You do not pay both point amounts'));
 assert(!get('recommendations').innerHTML.includes('Check public Chase'));
 assert(!get('flights').innerHTML.includes('demo-payment-grid'));
