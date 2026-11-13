@@ -66,7 +66,13 @@ offer.demo_redemption={carrier:'Southwest',program:'Southwest Rapid Rewards',poi
 vm.runInContext('render(data)',context);
 assert(get('recommendations').innerHTML.includes('16,000 pts'));
 assert(get('recommendations').innerHTML.includes('20,000 pts'));
-assert(get('recommendations').innerHTML.includes('Demo +25% bonus'));
+assert(get('recommendations').innerHTML.includes('Hardcoded demo +25% bonus'));
+assert(get('recommendations').innerHTML.includes('25% and 30% transfer bonuses are hardcoded examples'));
+assert(get('recommendations').innerHTML.includes('Choose one way to pay'));
+assert(get('recommendations').innerHTML.includes('Chase bank points'));
+assert(get('recommendations').innerHTML.includes('You do not pay both point amounts'));
+assert(!get('recommendations').innerHTML.includes('Check public Chase'));
+assert(!get('flights').innerHTML.includes('demo-payment-grid'));
 assert(get('recommendations').innerHTML.includes('No supported direct transfer'));
 assert(!get('recommendations').innerHTML.includes('id="quoteForm"'));
 console.log('Frontend rendering checks passed.');
