@@ -190,7 +190,6 @@ function render(data){
   el('hotels').innerHTML=data.hotels.length?data.hotels.map((o,i)=>offerHtml(o,i,true,mode)).join(''):'<div class="empty">No matching hotels. Demo fixtures cover the three scenario buttons; try a sample or connect live search.</div>';
   const chosenFlight=data.flights.find(o=>o.id===summary.flight_offer_id);
   const chosenHotel=data.hotels.find(o=>o.id===summary.hotel_offer_id);
-  const walletView=[chosenFlight,chosenHotel].filter(Boolean).map(o=>`<div><h4>${safe(o.name || o.carrier || o.id)}</h4>${pointsPaymentHtml(o)}</div>`).join('');
   const a=summary.comparison_illustrative_award || summary.best_illustrative_award;
   const savings=a?Number(a.economic_savings_usd):null;
   const verdict=a?(savings>0?`Points offer better modeled value by ${money(savings)}.`:savings<0?`Cash offers better modeled value by ${money(-savings)}.`:'Cash and points have equal modeled value.'):'No eligible points scenario to compare.';
@@ -200,12 +199,11 @@ function render(data){
   if(mode==='demo' && (chosenFlight?.demo_redemption || chosenHotel?.demo_redemption)){
     el('recommendations').innerHTML=`<div class="reco-box demo-comparison"><h3>How would you like to pay?</h3><p class="hardcoded-notice"><b>Demo only:</b> Prices are fictional. The 25% and 30% transfer bonuses are hardcoded examples, not current bank promotions. ${data.query.demo_bonuses?'Demo bonuses are ON.':'Bonuses are OFF: showing base transfer rates.'}</p>${comparison}<p class="pay-instruction">Change your flight or hotel below to update these prices. Edit your Chase and Amex balances under Points & rewards settings.</p></div>`;
   }else{
-  el('recommendations').innerHTML=`<div class="reco-box"><h3>Your cash-versus-points comparison</h3>${comparison}${liveRateHtml(data)}${promotionLookupHtml()}${mode==='demo'?'':quoteComparisonForm(data)}<details class="wallet-comparison"><summary>Compare Chase, Amex & loyalty points for your selections</summary>${walletView}<p>Each balance is separate. Estimates on two cards do not confirm your wallet can pay for both.</p></details><details class="reasoning-details"><summary>How this comparison works</summary>${mode==='demo'?'<p>Demo award prices are provided separately from cash prices. Transfer requirements apply the displayed base rules, fictional bonuses, and rounding. Each payment row is an alternative; bank balances are not pooled.</p>':summary.recommendations.map(s=>`<p>${safe(s)}</p>`).join('') || '<p>No recommendation available. Try another search.</p>'}</details><p><strong>Before booking:</strong> Verify exact flights, room conditions, required fees, and award availability with the provider.</p></div>`;
+  el('recommendations').innerHTML=`<div class="reco-box"><h3>Your cash-versus-points comparison</h3>${comparison}${liveRateHtml(data)}${promotionLookupHtml()}</div>`;
 
   el('liveRateForm').addEventListener('submit',lookupLiveRate);
   el('promotionLookup').addEventListener('click',lookupPromotions);
   }
-  if(el('quoteForm'))el('quoteForm').addEventListener('submit',compareQuotedPrices);
 }
 async function chooseOffer(kind,id){
   if(!lastResult)return;
