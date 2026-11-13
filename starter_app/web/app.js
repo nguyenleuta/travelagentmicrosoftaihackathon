@@ -49,7 +49,7 @@ for(const button of document.querySelectorAll('[data-case]')){
     doSearch();
   });
 }
-el('recommendPoints').addEventListener('click',recommendPoints);
+el('recommendBank').addEventListener('change',recommendPoints);
 el('tripForm').addEventListener('submit',event=>{event.preventDefault();doSearch(true);});
 function demoPaymentsHtml(offer,expanded=false){
   const d=offer.demo_redemption;
@@ -214,6 +214,7 @@ function recommendPoints(){
   if(!lastResult)return;
   const bank=el('recommendBank').value;
   const score=o=>{
+    if(bank==='cash')return o.total_cash_usd;
     const payment=(o.demo_redemption?.payments || o.cash_points_estimate?.payments || []).find(p=>p.bank===bank && p.supported);
     return payment?(payment.bank_points ?? payment.points):Infinity;
   };
@@ -221,7 +222,7 @@ function recommendPoints(){
   const flight=best(lastResult.flights),hotel=best(lastResult.hotels);
   if(!flight && !hotel){el('status').textContent='No supported points options for this bank. Try another bank.';return;}
   const selected={flight:flight?.id || lastResult.summary.flight_offer_id,hotel:hotel?.id || lastResult.summary.hotel_offer_id};
-  chooseOffer(flight?'flight':'hotel',flight?.id || hotel.id,selected,`Lowest ${bank==='amex'?'Amex':'Chase'} points options selected. ${!flight?'No supported flight transfer. ':''}${!hotel?'No supported hotel transfer. ':''}Compare cash fees and check your balance before booking.`);
+  return chooseOffer(flight?'flight':'hotel',flight?.id || hotel.id,selected,`${bank==='cash'?'Cheapest cash':bank==='amex'?'Lowest Amex points':'Lowest Chase points'} options selected.${!flight?' No supported flight transfer.':''}${!hotel?' No supported hotel transfer.':''}`);
 }
 async function chooseOffer(kind,id,overrides=null,successMessage=null){
   if(!lastResult)return;
