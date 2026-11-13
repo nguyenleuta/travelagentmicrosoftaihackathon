@@ -1,5 +1,5 @@
 import unittest
-from travel.transfer_quotes import compare_quotes
+from travel.transfer_quotes import compare_quotes, RULES
 
 
 BASE = {"route":"chase_southwest", "offer_id":"SW1", "portal_points":27500,
@@ -10,6 +10,28 @@ BASE = {"route":"chase_southwest", "offer_id":"SW1", "portal_points":27500,
 
 
 class TransferQuoteTests(unittest.TestCase):
+    def test_main_airline_rules(self):
+        for route, rule in RULES.items():
+            with self.subTest(route=route):
+                r = compare_quotes({**BASE,"route":route})
+                self.assertGreaterEqual(r["transfer"]["partner_points_received"],20000)
+                self.assertEqual(r["transfer"]["bank_points"] % rule["bank_block"],0)
+                self.assertEqual(rule["kind"],"hotel" if route=="amex_hilton" else "flight")
+
+    def test_jetblue_amex_costs_more_bank_points_than_chase(self):
+        chase = compare_quotes({**BASE,"route":"chase_jetblue"})
+        amex = compare_quotes({**BASE,"route":"amex_jetblue"})
+        self.assertEqual(chase["transfer"]["bank_points"],20000)
+        self.assertEqual(amex["transfer"]["bank_points"],25000)
+        self.assertEqual(amex["transfer"]["excise_fee_usd"],15)
+        self.assertEqual(amex["transfer"]["cash_usd"],20.6)
+
+    def test_amex_delta_excise_fee_cap_and_no_transfer_case(self):
+        r=compare_quotes({**BASE,"route":"amex_delta","award_points":1000000})
+        self.assertEqual(r["transfer"]["excise_fee_usd"],99)
+        r=compare_quotes({**BASE,"route":"amex_delta","partner_balance":20000})
+        self.assertEqual(r["transfer"]["excise_fee_usd"],0)
+
     def test_portal_vs_southwest_example(self):
         r = compare_quotes(BASE)
         self.assertEqual(r["transfer"]["bank_points"],20000)

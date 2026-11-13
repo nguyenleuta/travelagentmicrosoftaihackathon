@@ -11,3 +11,5 @@
 .points-prices{margin-top:14px;border-top:1px solid var(--border);padding-top:10px;font-size:12px}.points-prices>div{display:flex;justify-content:space-between;gap:12px;margin:6px 0}.points-prices small{display:block;color:var(--muted);line-height:1.5}.points-prices summary,.wallet-comparison>summary{cursor:pointer;padding:10px 0;font-weight:700;color:#285b45}.points-prices p{line-height:1.6}.wallet-inputs h4{margin:18px 0}.wallet-comparison h4{margin:14px 0 8px}
 
 .quote-tool{margin:18px 0;padding:14px;background:#fff;border:1px solid var(--border);border-radius:10px}.quote-tool>summary{cursor:pointer;font-weight:750;color:#285b45}.quote-tool .check{margin:14px 0;line-height:1.6}.quote-tool form>p{font-size:12px}#quoteResult{margin-top:16px;overflow-wrap:anywhere}
+
+.quote-table{overflow-x:auto;margin:16px 0}.quote-table table{width:100%;border-collapse:collapse;font-size:12px;text-align:left}.quote-table th,.quote-table td{padding:12px;border-bottom:1px solid var(--border);vertical-align:top;min-width:145px}.quote-table th{background:#edf5f3}

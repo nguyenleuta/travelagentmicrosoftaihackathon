@@ -11,6 +11,27 @@ RULES = {
         "source": "https://global.americanexpress.com/rewards/transfer?partner=5629f189e4b0b3d3bd79cc4f"},
 }
 
+CHASE_SOURCE = "https://www.chase.com/personal/credit-cards/education/basics/how-to-transfer-chase-ultimate-rewards-points"
+AMEX_SOURCE = "https://global.americanexpress.com/rewards/transfer"
+AMEX_TERMS = "https://www.americanexpress.com/content/dam/amex/us/rewards/membership-rewards/mr-terms-conditions-november-2026.pdf"
+for key, partner in (("united", "United MileagePlus"), ("jetblue", "JetBlue TrueBlue"),
+                     ("aeroplan", "Air Canada Aeroplan"), ("british_airways", "British Airways Avios"),
+                     ("flying_blue", "Air France / KLM Flying Blue")):
+    RULES["chase_" + key] = {"bank":"chase", "name":"Chase", "partner":partner,
+        "bank_block":1000, "partner_block":1000, "source":CHASE_SOURCE,
+        "ratio_source":"https://thepointsguy.com/loyalty-programs/chase-ultimate-rewards-transfer-partners"}
+for key, partner in (("delta", "Delta SkyMiles"), ("jetblue", "JetBlue TrueBlue"),
+                     ("aeroplan", "Air Canada Aeroplan"), ("british_airways", "British Airways Avios"),
+                     ("flying_blue", "Air France / KLM Flying Blue")):
+    RULES["amex_" + key] = {"bank":"amex", "name":"Amex", "partner":partner,
+        "bank_block":250 if key == "jetblue" else 1000,
+        "partner_block":200 if key == "jetblue" else 1000,
+        "source":AMEX_SOURCE,
+        "ratio_source": "https://www.aircanada.com/ca/en/ado/home/aeroplan/your-aeroplan/conversion-programs.html" if key == "aeroplan" else AMEX_SOURCE,
+        "us_airline_fee":key in {"delta", "jetblue"}}
+for key, rule in RULES.items():
+    rule["kind"] = "hotel" if key == "amex_hilton" else "flight"
+
 
 def compare_quotes(data):
     if not isinstance(data, dict) or data.get("route") not in RULES:
@@ -46,13 +67,14 @@ def compare_quotes(data):
     blocks = (deficit / rule["partner_block"]).to_integral_value(rounding=ROUND_CEILING)
     bank_used = blocks * rule["bank_block"]
     received = blocks * rule["partner_block"]
+    excise_fee = min(Decimal("99"), bank_used * Decimal("0.0006")) if rule.get("us_airline_fee") else Decimal(0)
     existing_used = min(award, partner_balance)
     # Value existing partner points separately; do not treat them as free.
     partner_cpp = numeric("partner_value_cents", positive=True)
     if partner_cpp > 10:
         raise ValueError("Partner point value must be at most 10 cents.")
     portal_economic = portal_cash + portal * cpp / 100
-    transfer_cash = award_cash + (transfer_fee if bank_used else 0)
+    transfer_cash = award_cash + (transfer_fee if bank_used else 0) + excise_fee
     transfer_economic = transfer_cash + bank_used * cpp / 100 + existing_used * partner_cpp / 100
     difference = portal_economic - transfer_economic
     portal_ok, transfer_ok = balance >= portal, balance >= bank_used
@@ -62,10 +84,12 @@ def compare_quotes(data):
         "portal": {"bank_points": int(portal), "cash_usd": float(portal_cash),
                    "economic_cost_usd": float(round(portal_economic, 2)), "shortfall": int(max(0, portal-balance))},
         "transfer": {"bank_points": int(bank_used), "partner_points_received": int(received),
+            "excise_fee_usd": float(round(excise_fee, 2)),
             "existing_partner_points_used": int(existing_used), "leftover_partner_points": int(received-deficit),
             "cash_usd": float(transfer_cash), "economic_cost_usd": float(round(transfer_economic, 2)),
             "shortfall": int(max(0, bank_used-balance))},
         "bank_points_difference": int(portal-bank_used), "economic_difference_usd": float(round(difference, 2)),
         "lower_economic_cost": "transfer" if difference > 0 else "portal" if difference < 0 else "tie",
         "both_affordable": portal_ok and transfer_ok, "comparison_confirmed_by_user": confirmed,
-        "note": "User-entered quotes, not independently verified. US base ratios; no transfer bonus. Confirm exact itinerary/room, dates, travelers, taxes, availability and account eligibility before transferring. Transfers may be irreversible."}
+        "fee_source": AMEX_TERMS if rule.get("us_airline_fee") else None,
+        "note": "User-entered quotes, not independently verified. US base ratios; no transfer bonus. Amex US-airline excise fee is added automatically where applicable; entered transfer fees are additional fees only. Airline program is the booking program, not necessarily the operating carrier. Confirm matching itinerary/room, dates, travelers, fees, award availability and eligibility. Transfers may be irreversible."}

@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 from .evidence import evidence
 from .rewards import equivalents
+from .transfer_quotes import RULES
 
 DATA_FILE = Path(__file__).resolve().parent.parent / "data" / "sample_offers.json"
 CITY_AIRPORTS = {
@@ -225,7 +226,7 @@ def compare(query: dict[str, Any], flight_raw: list[dict], hotel_raw: list[dict]
         all_warnings.insert(0, "DEMO MODE: all fares, hotels, carriers, points and rewards examples are fictional and cannot be booked.")
     else:
         all_warnings.insert(0, "LIVE SEARCH RESULTS are preliminary. Taxes, bag fees, room inclusions, fare rules, booking links, and checkout availability require independent verification.")
-    return {"query": query, "flights": flights, "hotels": hotels,
+    return {"query": query, "flights": flights, "hotels": hotels, "transfer_rules": RULES,
             "summary": {"flight_offer_id": lowest_flight["id"] if lowest_flight else None,
                         "selection_mode": "manual" if selected else "cheapest",
                         "hotel_offer_id": lowest_hotel["id"] if lowest_hotel else None,
