@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 from .evidence import evidence
 from .rewards import equivalents
-from .transfer_quotes import RULES
+from .transfer_quotes import card_rules
 from .demo_rewards import attach_demo_redemptions
 
 DATA_FILE = Path(__file__).resolve().parent.parent / "data" / "sample_offers.json"
@@ -92,6 +92,11 @@ def validate(request: dict[str, Any]) -> dict[str, Any]:
         if key in request and not isinstance(request[key], bool):
             raise ValueError(f"{key} must be true or false.")
     wallets = {}
+    chase_card = request.get("chase_card", "sapphire_preferred")
+    card_rules(chase_card)
+    demo_bonuses = request.get("demo_bonuses", True)
+    if not isinstance(demo_bonuses, bool):
+        raise ValueError("Demo bonuses must be true or false.")
     for bank in ("chase", "amex"):
         balance = input_number(bank + "_balance", 0)
         wallet_cpp = input_number(bank + "_value_cents", 1)
@@ -103,7 +108,8 @@ def validate(request: dict[str, Any]) -> dict[str, Any]:
             "travelers": travelers, "mode": mode, "card_name": card_name,
             "card_multiplier": multiplier, "point_value_cents": cpp, "award_points_balance": points,
             "checked_bag": bool(request.get("checked_bag", False)),
-            "carry_on": bool(request.get("carry_on", True)), **wallets}
+            "carry_on": bool(request.get("carry_on", True)), "chase_card":chase_card,
+            "demo_bonuses":demo_bonuses, **wallets}
 
 
 def demo_offers(query: dict[str, Any]) -> tuple[list[dict], list[dict]]:
@@ -229,7 +235,7 @@ def compare(query: dict[str, Any], flight_raw: list[dict], hotel_raw: list[dict]
         all_warnings.insert(0, "DEMO MODE: all fares, hotels, carriers, points and rewards examples are fictional and cannot be booked.")
     else:
         all_warnings.insert(0, "LIVE SEARCH RESULTS are preliminary. Taxes, bag fees, room inclusions, fare rules, booking links, and checkout availability require independent verification.")
-    return {"query": query, "flights": flights, "hotels": hotels, "transfer_rules": RULES,
+    return {"query": query, "flights": flights, "hotels": hotels, "transfer_rules": card_rules(query.get("chase_card", "sapphire_preferred")),
             "summary": {"flight_offer_id": lowest_flight["id"] if lowest_flight else None,
                         "selection_mode": "manual" if selected else "cheapest",
                         "hotel_offer_id": lowest_hotel["id"] if lowest_hotel else None,

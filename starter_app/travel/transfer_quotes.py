@@ -32,11 +32,29 @@ for key, partner in (("delta", "Delta SkyMiles"), ("jetblue", "JetBlue TrueBlue"
 for key, rule in RULES.items():
     rule["kind"] = "hotel" if key == "amex_hilton" else "flight"
 
+CHASE_CARDS = {"sapphire_preferred":"Sapphire Preferred", "sapphire_reserve":"Sapphire Reserve",
+    "freedom_only":"Freedom Unlimited only", "freedom_with_preferred":"Freedom + Sapphire Preferred",
+    "freedom_with_reserve":"Freedom + Sapphire Reserve"}
+RULES["chase_hyatt"] = {"bank":"chase", "name":"Chase", "partner":"World of Hyatt", "kind":"hotel",
+    "bank_block":1000, "partner_block":750,
+    "source":"https://media.chase.com/news/Meet-the-New-Chase-Sapphire-Preferred"}
+
+
+def card_rules(card="sapphire_preferred"):
+    if card not in CHASE_CARDS:
+        raise ValueError("Choose a supported Chase card.")
+    rules = {key:dict(value) for key,value in RULES.items() if not (card=="freedom_only" and value["bank"]=="chase")}
+    if "chase_hyatt" in rules and card in {"sapphire_reserve", "freedom_with_reserve"}:
+        rules["chase_hyatt"]["partner_block"] = 1000
+    return rules
+
 
 def compare_quotes(data):
     if not isinstance(data, dict) or data.get("route") not in RULES:
         raise ValueError("Choose a supported transfer route.")
-    rule = RULES[data["route"]]
+    rule = card_rules(data.get("chase_card", "sapphire_preferred")).get(data["route"])
+    if rule is None:
+        raise ValueError("Freedom Unlimited alone cannot transfer to travel partners. An eligible Sapphire card is required.")
 
     def numeric(key, whole=False, positive=False):
         try:

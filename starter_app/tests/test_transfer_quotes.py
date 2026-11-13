@@ -16,7 +16,7 @@ class TransferQuoteTests(unittest.TestCase):
                 r = compare_quotes({**BASE,"route":route})
                 self.assertGreaterEqual(r["transfer"]["partner_points_received"],20000)
                 self.assertEqual(r["transfer"]["bank_points"] % rule["bank_block"],0)
-                self.assertEqual(rule["kind"],"hotel" if route=="amex_hilton" else "flight")
+                self.assertEqual(rule["kind"],"hotel" if route in {"amex_hilton","chase_hyatt"} else "flight")
 
     def test_jetblue_amex_costs_more_bank_points_than_chase(self):
         chase = compare_quotes({**BASE,"route":"chase_jetblue"})

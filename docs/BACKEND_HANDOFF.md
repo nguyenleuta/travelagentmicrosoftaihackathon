@@ -1,5 +1,15 @@
 # Backend handoff for Nguyen
 
+## Card-specific rates and base-rate demo
+
+Rewards settings now select `chase_card`: `sapphire_preferred`, `sapphire_reserve`, `freedom_only`, `freedom_with_preferred`, or `freedom_with_reserve`. Freedom alone blocks direct partner transfers; combined options assume an eligible same-owner Sapphire account and show its rates. Amex still assumes an eligible US Membership Rewards card. These selections do not verify account holdings.
+
+The website now sends `demo_bonuses=false` by default, so the rate differences are visible without promotions. Users can enable the hardcoded 25–30% demo bonuses. Legacy API calls omitting this field preserve the prior demo default (true). Each payment card shows its base bank-points-to-partner-points ratio.
+
+Demo New York JetBlue: 18,000 JetBlue points require 18,000 Chase or 22,500 Amex points before bonuses, plus displayed cash fees. Demo NYC-H2 now uses a separate fictional 24,000 World of Hyatt-point quote: Sapphire Preferred requires 32,000 Chase points (4:3) and Reserve requires 24,000 (1:1). Hyatt increments use 1,000 bank points, not 4,000. Existing generic fixture awards remain unchanged. Chase's official card-specific Hyatt rule: https://media.chase.com/news/Meet-the-New-Chase-Sapphire-Preferred ; Amex JetBlue rule: https://global.americanexpress.com/rewards/transfer . Checked November 13, 2026.
+
+The backend returns card-specific `transfer_rules` in search and selection results, and `/api/rewards-quote` accepts `chase_card`. Demo awards remain fictional; published transfer rules are separate from availability.
+
 ## Live public promotion discovery
 
 `POST /api/promotions` accepts `{"bank":"chase"}` or `{"bank":"amex"}`. It uses the backend SerpApi key and a Google Search query restricted to issuer and supported airline/hotel official domains. Results contain source URLs, search excerpts, retrieval time and search-reported publication dates. Publication dates are never treated as expiry dates. Only HTTPS official-domain links without embedded credentials are accepted. A 30-minute in-memory cache limits repeat usage; each uncached bank lookup uses one search request.

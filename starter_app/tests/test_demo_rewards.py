@@ -7,6 +7,23 @@ from test_engine import BASE
 
 
 class DemoRewardsTests(unittest.TestCase):
+    def test_card_specific_hyatt_and_base_jetblue(self):
+        _,preferred=self.search({"demo_bonuses":False,"chase_card":"sapphire_preferred"})
+        _,reserve=self.search({"demo_bonuses":False,"chase_card":"sapphire_reserve"})
+        hotel=lambda r:next(o for o in r["hotels"] if o["id"]=="NYC-H2")["demo_redemption"]
+        self.assertEqual(hotel(preferred)["payments"][0]["bank_points"],32000)
+        self.assertEqual(hotel(reserve)["payments"][0]["bank_points"],24000)
+        jet=next(o for o in preferred["flights"] if o["id"]=="NYC-F2")["demo_redemption"]
+        self.assertEqual(jet["payments"][0]["bank_points"],18000)
+        self.assertEqual(jet["payments"][1]["bank_points"],22500)
+        self.assertEqual(jet["payments"][1]["bonus_percent"],0)
+
+    def test_freedom_alone_is_blocked_and_pooled_sapphire_works(self):
+        _,r=self.search({"chase_card":"freedom_only"})
+        self.assertFalse(r["flights"][0]["demo_redemption"]["payments"][0]["supported"])
+        _,r=self.search({"chase_card":"freedom_with_preferred"})
+        self.assertTrue(r["flights"][0]["demo_redemption"]["payments"][0]["supported"])
+
     def search(self, overrides=None):
         q=validate({**BASE, **(overrides or {})})
         f,h=demo_offers(q)

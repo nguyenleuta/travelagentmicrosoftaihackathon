@@ -2,24 +2,103 @@
   "notice": "FICTIONAL DEMO ONLY. Award prices, promotions and itineraries are invented; no real availability or active promotion is claimed.",
   "calculation_date": "2026-11-13",
   "promotions": [
-    {"route": "chase_southwest", "bonus_percent": 25, "starts": "2026-11-01", "ends": "2026-11-30"},
-    {"route": "amex_jetblue", "bonus_percent": 25, "starts": "2026-11-01", "ends": "2026-11-30"},
-    {"route": "amex_hilton", "bonus_percent": 30, "starts": "2026-11-01", "ends": "2026-11-30"}
+    {
+      "route": "chase_southwest",
+      "bonus_percent": 25,
+      "starts": "2026-11-01",
+      "ends": "2026-11-30"
+    },
+    {
+      "route": "amex_jetblue",
+      "bonus_percent": 25,
+      "starts": "2026-11-01",
+      "ends": "2026-11-30"
+    },
+    {
+      "route": "amex_hilton",
+      "bonus_percent": 30,
+      "starts": "2026-11-01",
+      "ends": "2026-11-30"
+    }
   ],
   "offers": {
-    "NYC-F1": {"carrier": "Southwest", "program": "Southwest Rapid Rewards", "points_per_traveler": 20000, "tax_per_traveler_usd": 11.2},
-    "NYC-F2": {"carrier": "JetBlue", "program": "JetBlue TrueBlue", "points_per_traveler": 18000, "tax_per_traveler_usd": 11.2},
-    "NYC-F3": {"carrier": "United", "program": "United MileagePlus", "points_per_traveler": 22000, "tax_per_traveler_usd": 11.2},
-    "TYO-F1": {"carrier": "Delta", "program": "Delta SkyMiles", "points_per_traveler": 62000, "tax_per_traveler_usd": 85},
-    "TYO-F2": {"carrier": "Air Canada", "program": "Air Canada Aeroplan", "points_per_traveler": 50000, "tax_per_traveler_usd": 100},
-    "TYO-F3": {"carrier": "American Airlines", "program": "AAdvantage miles", "points_per_traveler": 51000, "tax_per_traveler_usd": 120},
-    "LAS-F1": {"carrier": "Southwest", "program": "Southwest Rapid Rewards", "points_per_traveler": 14000, "tax_per_traveler_usd": 11.2},
-    "LAS-F2": {"carrier": "Frontier", "program": "FRONTIER Miles", "points_per_traveler": 12000, "tax_per_traveler_usd": 20},
-    "NYC-H1": {"program": "Hilton Honors", "points_total": 90000, "tax_total_usd": 0},
-    "NYC-H2": {"program": "Hilton Honors", "points_total": 100000, "tax_total_usd": 25},
-    "TYO-H1": {"program": "Hilton Honors", "points_total": 140000, "tax_total_usd": 0},
-    "TYO-H2": {"program": "Hilton Honors", "points_total": 160000, "tax_total_usd": 25},
-    "LAS-H1": {"program": "Hilton Honors", "points_total": 75000, "tax_total_usd": 25},
-    "LAS-H2": {"program": "Hilton Honors", "points_total": 80000, "tax_total_usd": 25}
+    "NYC-F1": {
+      "carrier": "Southwest",
+      "program": "Southwest Rapid Rewards",
+      "points_per_traveler": 20000,
+      "tax_per_traveler_usd": 11.2
+    },
+    "NYC-F2": {
+      "carrier": "JetBlue",
+      "program": "JetBlue TrueBlue",
+      "points_per_traveler": 18000,
+      "tax_per_traveler_usd": 11.2
+    },
+    "NYC-F3": {
+      "carrier": "United",
+      "program": "United MileagePlus",
+      "points_per_traveler": 22000,
+      "tax_per_traveler_usd": 11.2
+    },
+    "TYO-F1": {
+      "carrier": "Delta",
+      "program": "Delta SkyMiles",
+      "points_per_traveler": 62000,
+      "tax_per_traveler_usd": 85
+    },
+    "TYO-F2": {
+      "carrier": "Air Canada",
+      "program": "Air Canada Aeroplan",
+      "points_per_traveler": 50000,
+      "tax_per_traveler_usd": 100
+    },
+    "TYO-F3": {
+      "carrier": "American Airlines",
+      "program": "AAdvantage miles",
+      "points_per_traveler": 51000,
+      "tax_per_traveler_usd": 120
+    },
+    "LAS-F1": {
+      "carrier": "Southwest",
+      "program": "Southwest Rapid Rewards",
+      "points_per_traveler": 14000,
+      "tax_per_traveler_usd": 11.2
+    },
+    "LAS-F2": {
+      "carrier": "Frontier",
+      "program": "FRONTIER Miles",
+      "points_per_traveler": 12000,
+      "tax_per_traveler_usd": 20
+    },
+    "NYC-H1": {
+      "program": "Hilton Honors",
+      "points_total": 90000,
+      "tax_total_usd": 0
+    },
+    "NYC-H2": {
+      "program": "World of Hyatt",
+      "points_total": 24000,
+      "tax_total_usd": 25
+    },
+    "TYO-H1": {
+      "program": "Hilton Honors",
+      "points_total": 140000,
+      "tax_total_usd": 0
+    },
+    "TYO-H2": {
+      "program": "Hilton Honors",
+      "points_total": 160000,
+      "tax_total_usd": 25
+    },
+    "LAS-H1": {
+      "program": "Hilton Honors",
+      "points_total": 75000,
+      "tax_total_usd": 25
+    },
+    "LAS-H2": {
+      "program": "Hilton Honors",
+      "points_total": 80000,
+      "tax_total_usd": 25
+    }
   }
 }
