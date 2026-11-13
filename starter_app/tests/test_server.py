@@ -25,6 +25,13 @@ class ServerTests(unittest.TestCase):
         with urlopen(self.base + "/api/health", timeout=5) as resp:
             self.assertTrue(json.load(resp)["ok"])
 
+    def test_live_rate_endpoint(self):
+        from unittest.mock import patch
+        req=Request(self.base+"/api/transfer-rate",data=b'{"route":"amex_jetblue","award_points":20000}',headers={"Content-Type":"application/json"})
+        with patch("server.check_rate",return_value={"status":"rate_not_confirmed","sources":[]}):
+            with urlopen(req,timeout=5) as resp:
+                self.assertEqual(json.load(resp)["status"],"rate_not_confirmed")
+
     def test_public_promotion_endpoint(self):
         from unittest.mock import patch
         req=Request(self.base+"/api/promotions",data=b'{"bank":"chase"}',headers={"Content-Type":"application/json"})

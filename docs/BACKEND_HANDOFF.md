@@ -1,5 +1,11 @@
 # Backend handoff for Nguyen
 
+## Live source-backed rate checks
+
+Live mode has a public transfer-rate form using `/api/transfer-rate`. Input: route, Chase card, optional user-entered airline/hotel award points. A SerpApi Google request looks for official excerpts stating the maintained base rate. The result includes source URLs, excerpts and retrieval time. A matching explicit base ratio enables a rounded bank-points conversion. Missing or conflicting evidence leaves the rate unconfirmed and no conversion is shown. Bonuses and known non-US sources are excluded; Hyatt checks require card context.
+
+This corroborates a stored rate against search excerpts; it does not independently verify all current account terms, award availability, taxes, or transfer fees. All those limitations stay visible. It never calculates an airline award price from cash. The live JetBlue smoke test returned no matching ratio evidence and was correctly marked unconfirmed. Mocked tests verify a 250:200 official excerpt converts 20,000 user-entered JetBlue points to 25,000 Amex points. No live successful ratio confirmation was claimed.
+
 ## Card-specific rates and base-rate demo
 
 Rewards settings now select `chase_card`: `sapphire_preferred`, `sapphire_reserve`, `freedom_only`, `freedom_with_preferred`, or `freedom_with_reserve`. Freedom alone blocks direct partner transfers; combined options assume an eligible same-owner Sapphire account and show its rates. Amex still assumes an eligible US Membership Rewards card. These selections do not verify account holdings.

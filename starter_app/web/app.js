@@ -130,6 +130,24 @@ async function compareQuotedPrices(event){
   }catch(error){if(version===searchVersion)result.textContent=error.message;}
   finally{button.disabled=false;}
 }
+function liveRateHtml(data){
+  return `<section class="quote-tool"><h4>Check a live public transfer rate</h4><p>SerpApi checks official source excerpts. Choose a program; enter its award price if you have it.</p><form id="liveRateForm"><div class="grid2"><label>Card to loyalty program<select name="route">${Object.entries(data.transfer_rules || {}).map(([key,r])=>`<option value="${safe(key)}">${safe(r.name)} to ${safe(r.partner)}</option>`).join('')}</select></label><label>Airline / hotel award points (optional)<input name="award_points" type="number" min="1" max="100000000" step="1" placeholder="e.g. 20000 airline points" /></label></div><button class="choose-offer" type="submit">Check source & convert</button><div id="liveRateResult" role="status" aria-live="polite"></div></form></section>`;
+}
+async function lookupLiveRate(event){
+  event.preventDefault();
+  const form=event.currentTarget, output=el('liveRateResult'), version=searchVersion;
+  const values=Object.fromEntries(new FormData(form));values.chase_card=lastResult.query.chase_card || 'sapphire_preferred';
+  const button=form.querySelector('button');button.disabled=true;output.textContent='Checking the public rate through SerpApi?';
+  try{
+    const response=await fetch('/api/transfer-rate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(values)});
+    if(response.status===404)throw new Error('Restart the Python server to enable live rate checks.');
+    const r=await response.json();if(version!==searchVersion)return;
+    if(!response.ok)throw new Error(r.error || 'Rate check failed');
+    const confirmed=r.status==='ratio_supported_by_official_search_excerpt';
+    output.innerHTML=`<p><b>${confirmed?'Rate found in an official search excerpt':'Rate not confirmed by returned sources'}</b> ? Checked ${safe(r.observed_utc)}</p>${confirmed?`<p>${Number(r.rule.bank_block).toLocaleString()} ${safe(r.rule.name)} points = ${Number(r.rule.partner_block).toLocaleString()} ${safe(r.rule.partner)} points.</p>`:''}${r.conversion?`<div class="payment-comparison"><div><small>USE ${safe(r.rule.partner.toUpperCase())}</small><strong>${Number(r.award_points).toLocaleString()} pts</strong><p>User-entered award quote</p></div><div><small>TRANSFER ${safe(r.rule.name.toUpperCase())} POINTS</small><strong>${Number(r.conversion.bank_points).toLocaleString()} pts</strong><p>Receive ${Number(r.conversion.partner_points).toLocaleString()} partner points; ${Number(r.conversion.leftover).toLocaleString()} left over.</p></div></div><p><b>Plus award taxes and applicable transfer fees. This is not a verified bookable total.</b></p>`:'<p>No booking-points price shown. A confirmed rate and an airline/hotel award quote are both needed.</p>'}${r.sources.map(e=>`<details><summary>${safe(e.title)}</summary><p>${safe(e.excerpt)}</p>${safeLink(e.url,'Open official source')}</details>`).join('')}<p>${safe(r.note)}</p>`;
+  }catch(error){if(version===searchVersion)output.textContent=error.message;}
+  finally{button.disabled=false;}
+}
 function promotionLookupHtml(){
   return `<details class="quote-tool"><summary>Check public Chase & Amex transfer offers</summary><p>Find official source pages through SerpApi. Public offers may have expired or require account eligibility; they are not applied automatically. Demo bonuses remain fictional.</p><label>Points program<select id="promotionBank"><option value="chase">Chase</option><option value="amex">Amex</option></select></label><button type="button" class="choose-offer" id="promotionLookup">Check public offers</button><div id="promotionResults" role="status" aria-live="polite"></div></details>`;
 }
@@ -174,8 +192,9 @@ function render(data){
   if(mode==='demo' && (chosenFlight?.demo_redemption || chosenHotel?.demo_redemption)){
     el('recommendations').innerHTML=`<div class="reco-box demo-comparison"><h3>How would you like to pay?</h3><p class="hardcoded-notice"><b>Demo only:</b> Prices are fictional. The 25% and 30% transfer bonuses are hardcoded examples, not current bank promotions. ${data.query.demo_bonuses?'Demo bonuses are ON.':'Bonuses are OFF: showing base transfer rates.'}</p>${comparison}<p class="pay-instruction">Change your flight or hotel below to update these prices. Edit your Chase and Amex balances under Points & rewards settings.</p></div>`;
   }else{
-  el('recommendations').innerHTML=`<div class="reco-box"><h3>Your cash-versus-points comparison</h3>${comparison}${promotionLookupHtml()}${mode==='demo'?'':quoteComparisonForm(data)}<details class="wallet-comparison"><summary>Compare Chase, Amex & loyalty points for your selections</summary>${walletView}<p>Each balance is separate. Estimates on two cards do not confirm your wallet can pay for both.</p></details><details class="reasoning-details"><summary>How this comparison works</summary>${mode==='demo'?'<p>Demo award prices are provided separately from cash prices. Transfer requirements apply the displayed base rules, fictional bonuses, and rounding. Each payment row is an alternative; bank balances are not pooled.</p>':summary.recommendations.map(s=>`<p>${safe(s)}</p>`).join('') || '<p>No recommendation available. Try another search.</p>'}</details><p><strong>Before booking:</strong> Verify exact flights, room conditions, required fees, and award availability with the provider.</p></div>`;
+  el('recommendations').innerHTML=`<div class="reco-box"><h3>Your cash-versus-points comparison</h3>${comparison}${liveRateHtml(data)}${promotionLookupHtml()}${mode==='demo'?'':quoteComparisonForm(data)}<details class="wallet-comparison"><summary>Compare Chase, Amex & loyalty points for your selections</summary>${walletView}<p>Each balance is separate. Estimates on two cards do not confirm your wallet can pay for both.</p></details><details class="reasoning-details"><summary>How this comparison works</summary>${mode==='demo'?'<p>Demo award prices are provided separately from cash prices. Transfer requirements apply the displayed base rules, fictional bonuses, and rounding. Each payment row is an alternative; bank balances are not pooled.</p>':summary.recommendations.map(s=>`<p>${safe(s)}</p>`).join('') || '<p>No recommendation available. Try another search.</p>'}</details><p><strong>Before booking:</strong> Verify exact flights, room conditions, required fees, and award availability with the provider.</p></div>`;
 
+  el('liveRateForm').addEventListener('submit',lookupLiveRate);
   el('promotionLookup').addEventListener('click',lookupPromotions);
   }
   if(el('quoteForm'))el('quoteForm').addEventListener('submit',compareQuotedPrices);
