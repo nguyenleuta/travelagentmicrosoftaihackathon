@@ -52,7 +52,7 @@ for(const button of document.querySelectorAll('[data-case]')){
     doSearch();
   });
 }
-el('tripForm').addEventListener('submit',event=>{event.preventDefault();doSearch();});
+el('tripForm').addEventListener('submit',event=>{event.preventDefault();doSearch(true);});
 function offerHtml(offer,index,isHotel,mode){
   const title=isHotel?offer.name:`${offer.origin} → ${offer.destination} · ${offer.carrier}`;
   const details=isHotel?`${offer.room_type || 'Room type unknown'}`:
@@ -65,7 +65,7 @@ function offerHtml(offer,index,isHotel,mode){
     `Modeled fees included. Estimated cash rewards: ${Number(offer.reward_points_earned||0).toLocaleString()} points`;
   const dates=isHotel?`${offer.checkin || ''} → ${offer.checkout || ''}`:`${offer.depart_date || ''} → ${offer.return_date || ''}`;
   const bags=isHotel?'':`<p class="offer-detail">Carry-on: ${safe(bagLabel(offer,'carry_on_included','carry_on_per_traveler_usd'))} · Checked bag: ${safe(bagLabel(offer,'checked_bag_included','checked_bag_per_traveler_usd'))}</p>`;
-  return `<article class="offer ${index===0?'offer-best':''}"><div class="offer-top"><div><h4>${safe(title)}</h4><div class="sourceline">${safe(offer.source)}</div></div><div class="cost">${money(offer.total_cash_usd)}<small>${completePrice(offer)?'modeled total':'known estimate'} · ${isHotel?'full stay':'all travelers'}</small></div></div><div class="tags"><span class="tag fake">${mode==='demo'?'SYNTHETIC TEST PRICE':'UNVERIFIED LIVE SEARCH'}</span><span class="tag">${safe(details)}</span><span class="tag">${safe(offer.id)}</span></div><div class="sourceline">${safe(dates)}<br>${meta}</div>${bags}${award}${evidenceHtml(offer)}<div class="offer-foot"><span>${safe(completeness)}</span><span>${safe(timeLabel)} · ${safe(offer.verification?.label || 'Not checkout verified')}</span></div></article>`;
+  return `<article class="offer ${index===0?'offer-best':''}"><div class="offer-top"><div><h4>${safe(title)}</h4><div class="sourceline">${safe(offer.source)}</div></div><div class="cost">${money(offer.total_cash_usd)}<small>${completePrice(offer)?'modeled total':'known estimate'} · ${isHotel?'full stay':'all travelers'}</small></div></div><div class="tags"><span class="tag fake">${mode==='demo'?'SYNTHETIC TEST PRICE':'UNVERIFIED LIVE SEARCH'}</span><span class="tag">${safe(details)}</span><span class="tag">${index===0?'Selected for trip':safe(offer.id)}</span></div><div class="sourceline">${safe(dates)}</div><details class="card-details"><summary>View trip details, fees & points</summary><div class="sourceline">${meta}</div>${bags}${award}${evidenceHtml(offer)}<div class="offer-foot"><span>${safe(completeness)}</span><span>${safe(timeLabel)} · ${safe(offer.verification?.label || 'Not checkout verified')}</span></div></details></article>`;
 }
 function render(data){
   lastResult=data;
@@ -86,10 +86,10 @@ function render(data){
   const verdict=a?(savings>0?`Points offer better modeled value by ${money(savings)}.`:savings<0?`Cash offers better modeled value by ${money(-savings)}.`:'Cash and points have equal modeled value.'):'No eligible points scenario to compare.';
   const unavailable=!hasTrip?'A complete trip price is needed before comparing points.':'No affordable points option with complete fee information was returned.';
   const comparison=`<div class="payment-comparison"><div><small>PAY CASH</small><strong>${hasTrip?money(summary.modeled_trip_cash_usd):hasKnown?money(summary.known_trip_cash_usd):'Not available'}</strong><p>${hasTrip?'Flight + hotel cash outlay':hasKnown?'Known estimate — required fees unknown':'Flight or hotel results missing'}</p></div><div><small>ONE AWARD + CASH · SCENARIO ONLY</small><strong>${a?money(a.trip_cash_outlay_usd):'Not available'}</strong><p>${a?`Plus ${Number(a.points).toLocaleString()} points<br>Value of points used: ${money(Number(a.points)*data.query.point_value_cents/100)}<br>Total economic cost: <b>${money(a.trip_economic_cost_usd)}</b><br>${safe(a.kind)} award: ${safe(a.offer_id)}`:safe(unavailable)}</p></div></div><p><strong>${safe(verdict)}</strong></p>${a?'<p>Economic cost = cash paid + your value of points used. Availability and program eligibility are unverified.</p>':''}`;
-  el('recommendations').innerHTML=`<div class="reco-box"><h3>Your cash-versus-points comparison</h3>${comparison}${summary.recommendations.map(s=>`<p>${safe(s)}</p>`).join('') || '<p>No recommendation available. Try another search.</p>'}<p><strong>Before booking:</strong> Verify exact flights, room conditions, required fees, and award availability with the provider.</p><button type="button" id="exportComparison" class="export-button">Download comparison evidence</button><p>Includes search inputs, price breakdowns, sources, and missing fees.</p></div>`;
+  el('recommendations').innerHTML=`<div class="reco-box"><h3>Your cash-versus-points comparison</h3>${comparison}<details class="reasoning-details"><summary>How we compared these options</summary>${summary.recommendations.map(s=>`<p>${safe(s)}</p>`).join('') || '<p>No recommendation available. Try another search.</p>'}</details><p><strong>Before booking:</strong> Verify exact flights, room conditions, required fees, and award availability with the provider.</p><button type="button" id="exportComparison" class="export-button">Download comparison evidence</button><p>Includes search inputs, price breakdowns, sources, and missing fees.</p></div>`;
   el('exportComparison').addEventListener('click',exportComparison);
 }
-async function doSearch(){
+async function doSearch(scrollToResults=false){
   const version=++searchVersion;
   lastResult=null;
   const button=el('searchButton');button.disabled=true;
@@ -102,6 +102,7 @@ async function doSearch(){
     if(version!==searchVersion)return;
     if(!response.ok)throw new Error(payload.error||'Search failed');
     render(payload);
+    if(scrollToResults)el('results').scrollIntoView({behavior:'smooth',block:'start'});
     el('status').textContent=`Search complete • ${payload.query.mode==='demo'?'fictional data':'preliminary live listing estimates'} • prices in USD`;
   }catch(error){
     if(version!==searchVersion)return;
