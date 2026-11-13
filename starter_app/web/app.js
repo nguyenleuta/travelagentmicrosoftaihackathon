@@ -63,7 +63,7 @@ function liveEstimateHtml(offer){
   const e=offer.cash_points_estimate;
   if(!e)return '';
   const cards=e.payments.map(p=>`<div class="pay-option"><span class="pay-label">${safe(p.label.toUpperCase())} POINTS ESTIMATE</span><strong>${p.supported?`${Number(p.points).toLocaleString()} pts`:'Unavailable'}</strong><p>${p.supported?`Transfer to ${safe(e.program)} at ${Number(p.bank_block).toLocaleString()}:${Number(p.partner_block).toLocaleString()}.<br>${p.shortfall?`Need ${Number(p.shortfall).toLocaleString()} more bank points.`:'Entered balance covers this estimate.'}<br>Award taxes unknown${p.transfer_fee_usd?`; modeled transfer fee ${money(p.transfer_fee_usd)}`:''}.`:safe(p.reason)}</p></div>`).join('');
-  return `<section class="demo-payments"><h4>${safe(offer.carrier || offer.name || offer.id)}</h4><p class="hardcoded-notice"><b>Points estimate, not an award quote.</b> Assumption: $100 = 10,000 airline/hotel points. No bonus applied.</p><div class="demo-payment-grid"><div class="pay-option"><span class="pay-label">CASH ${e.cash_complete?'PRICE':'KNOWN ESTIMATE'}</span><strong>${money(e.cash_usd)}</strong></div><div class="pay-option"><span class="pay-label">${safe(e.program || 'LOYALTY POINTS')} ESTIMATE</span><strong>${Number(e.points).toLocaleString()} pts</strong><p>Cash price divided by an assumed 1 cent per point. Award taxes unknown.</p></div>${cards}</div><details><summary>Estimate assumptions</summary><p>${safe(e.note)}</p></details></section>`;
+  return `<section class="demo-payments"><h4>${safe(offer.carrier || offer.name || offer.id)}</h4><p class="hardcoded-notice"><b>Points estimate, not an award quote.</b> Assumption: $100 = 10,000 airline/hotel points. No bonus applied.</p><div class="demo-payment-grid"><div class="pay-option"><span class="pay-label">CASH ${e.cash_complete?'PRICE':'KNOWN ESTIMATE'}</span><strong>${money(e.cash_usd)}</strong></div><div class="pay-option"><span class="pay-label">${safe(e.program || 'LOYALTY POINTS')} ESTIMATE</span><strong>${Number(e.points).toLocaleString()} pts</strong><p>Cash price divided by an assumed 1 cent per point. Award taxes unknown.</p></div>${cards}</div><details><summary>Assumptions &amp; rate sources</summary><p>${safe(e.note)}</p>${e.payments.filter(p=>p.supported).map(p=>`<p>${safe(p.label)}: ${safeLink(p.source_url,'Stored base-rate source')} (not freshly verified for this search).</p>`).join('')}</details></section>`;
 }
 function pointsPaymentHtml(offer){
   if(offer.demo_redemption)return demoPaymentsHtml(offer);
@@ -199,10 +199,8 @@ function render(data){
   if(mode==='demo' && (chosenFlight?.demo_redemption || chosenHotel?.demo_redemption)){
     el('recommendations').innerHTML=`<div class="reco-box demo-comparison"><h3>How would you like to pay?</h3><p class="hardcoded-notice"><b>Demo only:</b> Prices are fictional. The 25% and 30% transfer bonuses are hardcoded examples, not current bank promotions. ${data.query.demo_bonuses?'Demo bonuses are ON.':'Bonuses are OFF: showing base transfer rates.'}</p>${comparison}<p class="pay-instruction">Change your flight or hotel below to update these prices. Edit your Chase and Amex balances under Points & rewards settings.</p></div>`;
   }else{
-  el('recommendations').innerHTML=`<div class="reco-box"><h3>Your cash-versus-points comparison</h3>${comparison}${liveRateHtml(data)}${promotionLookupHtml()}</div>`;
+  el('recommendations').innerHTML=`<div class="reco-box"><h3>Your cash-versus-points comparison</h3>${comparison}</div>`;
 
-  el('liveRateForm').addEventListener('submit',lookupLiveRate);
-  el('promotionLookup').addEventListener('click',lookupPromotions);
   }
 }
 async function chooseOffer(kind,id){
