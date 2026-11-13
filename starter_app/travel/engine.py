@@ -13,6 +13,7 @@ from .evidence import evidence
 from .rewards import equivalents
 from .transfer_quotes import card_rules
 from .demo_rewards import attach_demo_redemptions
+from .points_estimates import cash_points_estimate
 
 DATA_FILE = Path(__file__).resolve().parent.parent / "data" / "sample_offers.json"
 CITY_AIRPORTS = {
@@ -172,6 +173,7 @@ def compare(query: dict[str, Any], flight_raw: list[dict], hotel_raw: list[dict]
     for offer in flights + hotels:
         offer.pop("demo_redemption", None)
         offer["points_payment"] = equivalents(offer, query)
+        offer["cash_points_estimate"] = cash_points_estimate(offer, query)
     attach_demo_redemptions(flights + hotels, query)
     lowest_flight, lowest_hotel = (flights[0] if flights else None), (hotels[0] if hotels else None)
     if selected:

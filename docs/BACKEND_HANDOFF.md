@@ -1,5 +1,13 @@
 # Backend handoff for Nguyen
 
+## Cash-based points fallback in Live mode
+
+At the user's request, when no normalized award price is available, `cash_points_estimate` now supplies an explicitly hypothetical planning comparison: known cash USD × 100 = airline/hotel points at an assumed 1 cent per partner point. This is not sourced award inventory. Recognized carrier/property names map to a program solely for estimating a direct transfer; the mapping does not establish an award quote. Unknown programs or unsupported routes do not get fabricated bank conversions.
+
+Card-specific stored base rules and transfer block rounding convert the estimated partner points to Chase/Amex amounts. No promotion is applied. The displayed source is a maintained rule reference, not a freshly verified SerpApi result. Applicable Amex excise fees are modeled separately, while actual award taxes remain unknown. Price-incomplete cash quotes keep that label. Actual award-point fields suppress this fallback. Demo mode continues to use its separate fictional fixtures.
+
+Example: a $100 JetBlue listing becomes an estimated 10,000 JetBlue points, requiring 10,000 Chase or 12,500 Amex points before unknown award fees; Amex has a modeled $7.50 transfer fee. Live selected-offer comparisons display these cards automatically, with the assumption visible on every comparison.
+
 ## Live source-backed rate checks
 
 Live mode has a public transfer-rate form using `/api/transfer-rate`. Input: route, Chase card, optional user-entered airline/hotel award points. A SerpApi Google request looks for official excerpts stating the maintained base rate. The result includes source URLs, excerpts and retrieval time. A matching explicit base ratio enables a rounded bank-points conversion. Missing or conflicting evidence leaves the rate unconfirmed and no conversion is shown. Bonuses and known non-US sources are excluded; Hyatt checks require card context.
