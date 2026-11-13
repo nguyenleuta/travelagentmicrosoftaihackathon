@@ -40,3 +40,7 @@ Johnny has also updated `starter_app/web/app.js` and `styles.css` while Nguyen h
 Run `python scripts/portability_check.py` from the repo root. Regression cases cover missing fees, selected baggage, missing trip components, award baseline errors, missing award taxes, and insufficient points.
 
 Optional frontend checks (Node.js needed only for these tests): `node starter_app/tests/frontend.test.cjs`. These check rendered unknown amounts, unsafe source text/links, losing award comparisons, and the JSON download. Python checks also cover breakdown arithmetic and verification status.
+
+## Click-to-select update
+
+The download button and export feature were removed. Search selects the cheapest known flight and hotel by default. Clicking another card or its keyboard-accessible Choose button posts the existing offers and selected IDs to `/api/compare`; no provider search is repeated. Totals, rewards, and award comparisons use the selected pair. Opening details or source links does not change selection. A new search restores the default cheapest pair.

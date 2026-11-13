@@ -57,13 +57,25 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(content)
 
     def do_POST(self) -> None:
-        if self.path != "/api/search":
+        if self.path not in {"/api/search", "/api/compare"}:
             return self._json(404, {"error": "Not found"})
         try:
             length = int(self.headers.get("Content-Length", "0"))
-            if length <= 0 or length > 20000:
+            if length <= 0 or length > (200000 if self.path == "/api/compare" else 20000):
                 raise ValueError("Invalid request size")
             supplied = json.loads(self.rfile.read(length).decode("utf-8"))
+            if self.path == "/api/compare":
+                if not isinstance(supplied, dict):
+                    raise ValueError("Provide a JSON object.")
+                query = validate(supplied.get("query"))
+                flights, hotels = supplied.get("flights"), supplied.get("hotels")
+                selected = supplied.get("selected")
+                if (not isinstance(flights, list) or not isinstance(hotels, list) or
+                    len(flights) > 100 or len(hotels) > 100 or
+                    not all(isinstance(o, dict) and isinstance(o.get("id"), str) for o in flights + hotels) or
+                    not isinstance(selected, dict)):
+                    raise ValueError("Provide valid offers and selected IDs.")
+                return self._json(200, compare(query, flights, hotels, selected=selected))
             query = validate(supplied)
             if query["mode"] == "demo":
                 flights, hotels = demo_offers(query)

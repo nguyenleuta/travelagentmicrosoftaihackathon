@@ -11,6 +11,20 @@ BASE = {
 
 
 class EngineTests(unittest.TestCase):
+    def test_manual_selection_updates_total_rewards_and_award_baseline(self):
+        q = validate({**BASE, "point_value_cents": 1})
+        f, h = demo_offers(q)
+        result = compare(q, f, h, selected={"flight": "NYC-F2", "hotel": "NYC-H2"})
+        summary = result["summary"]
+        self.assertEqual(summary["selection_mode"], "manual")
+        self.assertEqual(summary["flight_offer_id"], "NYC-F2")
+        self.assertEqual(summary["hotel_offer_id"], "NYC-H2")
+        self.assertEqual(summary["modeled_trip_cash_usd"], 1098)
+        self.assertEqual(summary["modeled_points_earned_if_cash"], 3294)
+        self.assertIn(summary["comparison_illustrative_award"]["offer_id"], {"NYC-F2", "NYC-H2"})
+        with self.assertRaises(ValueError):
+            compare(q, f, h, selected={"flight": "missing", "hotel": "NYC-H2"})
+
     def test_validate_dates(self):
         with self.assertRaises(ValueError):
             validate({**BASE, "return_date": "2027-03-11"})

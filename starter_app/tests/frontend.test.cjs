@@ -42,12 +42,6 @@ context.data.summary = {modeled_trip_cash_usd:1000,recommendations:[],comparison
   economic_savings_usd:-100,trip_cash_outlay_usd:500,trip_economic_cost_usd:1100,points:30000,kind:'hotel',offer_id:'H1'}};
 vm.runInContext('render(data)',context);
 assert(get('recommendations').innerHTML.includes('Cash offers better modeled value by $100.00'));
-vm.runInContext('exportComparison()',context);
-assert.equal(downloaded,'fareforge-comparison.json');
-savedBlob.text().then(text=>{
-  const report=JSON.parse(text);
-  assert.equal(report.flights[0].price_breakdown.components[1].amount_usd,null);
-  assert.equal(report.flights[0].verification.status,'live_search_unverified');
-  assert(report.notice.includes('not provider observation time'));
-  console.log('Frontend rendering and evidence export checks passed.');
-}).catch(error=>{console.error(error);process.exitCode=1;});
+assert(!get('recommendations').innerHTML.includes('Download comparison evidence'));
+assert(get('flights').innerHTML.includes('Choose flight'));
+console.log('Frontend rendering checks passed.');
