@@ -25,6 +25,14 @@ class ServerTests(unittest.TestCase):
         with urlopen(self.base + "/api/health", timeout=5) as resp:
             self.assertTrue(json.load(resp)["ok"])
 
+    def test_public_promotion_endpoint(self):
+        from unittest.mock import patch
+        req=Request(self.base+"/api/promotions",data=b'{"bank":"chase"}',headers={"Content-Type":"application/json"})
+        with patch("server.public_promotions",return_value={"bank":"chase","results":[]}) as lookup:
+            with urlopen(req,timeout=5) as resp:
+                self.assertEqual(json.load(resp)["bank"],"chase")
+        lookup.assert_called_once_with("chase")
+
     def test_rewards_quote_endpoint(self):
         from test_transfer_quotes import BASE
         req = Request(self.base + "/api/rewards-quote", data=json.dumps(BASE).encode(), headers={"Content-Type":"application/json"})

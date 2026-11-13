@@ -1,5 +1,13 @@
 # Backend handoff for Nguyen
 
+## Live public promotion discovery
+
+`POST /api/promotions` accepts `{"bank":"chase"}` or `{"bank":"amex"}`. It uses the backend SerpApi key and a Google Search query restricted to issuer and supported airline/hotel official domains. Results contain source URLs, search excerpts, retrieval time and search-reported publication dates. Publication dates are never treated as expiry dates. Only HTTPS official-domain links without embedded credentials are accepted. A 30-minute in-memory cache limits repeat usage; each uncached bank lookup uses one search request.
+
+The UI adds an expandable public-offer lookup. Results remain `unverified_search_result`: active dates, applicability and account eligibility are not established by a search excerpt. No discovered bonus is applied to a price or relabeled as a verified current offer. Empty results do not establish that no offers exist. Demo promotion calculations remain fictional. This is real source discovery, not automated promotion verification or an award-price feed.
+
+Live smoke checks on November 13, 2026 returned one official Chase result and no official Amex results. No active promotion was confirmed. Unit tests mock provider responses and cover domain filtering, cache behavior, missing credentials, empty searches and safe errors. `.env` stays local and ignored; the portability export check must run on a clean export without it.
+
 ## Automatic demo payment comparison
 
 Demo offers now expose `demo_redemption`: fictional airline/hotel award prices plus Chase and Amex transfer payment rows. UI shows cash, loyalty currency, and bank points after conversion automatically for each selected offer. Demo mode hides the manual quote calculator. Expand the transfer details for ratios, bonuses, rounding, leftovers and fees. The original fixture cash prices and generic award fields remain unchanged for compatibility.

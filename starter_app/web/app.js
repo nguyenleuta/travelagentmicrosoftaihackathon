@@ -126,6 +126,24 @@ async function compareQuotedPrices(event){
   }catch(error){if(version===searchVersion)result.textContent=error.message;}
   finally{button.disabled=false;}
 }
+function promotionLookupHtml(){
+  return `<details class="quote-tool"><summary>Check public Chase & Amex transfer offers</summary><p>Find official source pages through SerpApi. Public offers may have expired or require account eligibility; they are not applied automatically. Demo bonuses remain fictional.</p><label>Points program<select id="promotionBank"><option value="chase">Chase</option><option value="amex">Amex</option></select></label><button type="button" class="choose-offer" id="promotionLookup">Check public offers</button><div id="promotionResults" role="status" aria-live="polite"></div></details>`;
+}
+async function lookupPromotions(){
+  const button=el('promotionLookup');
+  const output=el('promotionResults');
+  const version=searchVersion;
+  button.disabled=true;output.textContent='Checking public offer sources?';
+  try{
+    const response=await fetch('/api/promotions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({bank:el('promotionBank').value})});
+    if(response.status===404)throw new Error('Restart the Python server to enable public promotion lookup.');
+    const data=await response.json();
+    if(version!==searchVersion)return;
+    if(!response.ok)throw new Error(data.error || 'Offer lookup failed');
+    output.innerHTML=`<p><b>${safe(data.issuer)}</b> ? Checked ${safe(data.observed_utc)}${data.cached?' ? Saved search result':''}</p>${data.results.length?data.results.map(r=>`<article class="public-offer"><p>${safeLink(r.source_url,r.title)}</p><p>${safe(r.excerpt)}</p><small>Dates and eligibility unconfirmed ? Not applied${r.reported_publication_date?` ? Search-reported date: ${safe(r.reported_publication_date)} (not an expiry date)`:''}</small></article>`).join(''):'<p>No matching official pages returned. This does not establish that no offers exist; check your bank account.</p>'}<p>${safe(data.note)}</p>`;
+  }catch(error){if(version===searchVersion)output.textContent=error.message;}
+  finally{button.disabled=false;}
+}
 function render(data){
   quoteHistory=[];
   lastResult=data;
@@ -149,8 +167,9 @@ function render(data){
   const verdict=a?(savings>0?`Points offer better modeled value by ${money(savings)}.`:savings<0?`Cash offers better modeled value by ${money(-savings)}.`:'Cash and points have equal modeled value.'):'No eligible points scenario to compare.';
   const unavailable=!hasTrip?'A complete trip price is needed before comparing points.':'No affordable points option with complete fee information was returned.';
   const comparison=mode==='demo' && (chosenFlight?.demo_redemption || chosenHotel?.demo_redemption)?[chosenFlight,chosenHotel].filter(o=>o?.demo_redemption).map(o=>demoPaymentsHtml(o,true)).join(''):`<div class="payment-comparison"><div><small>PAY CASH</small><strong>${hasTrip?money(summary.modeled_trip_cash_usd):hasKnown?money(summary.known_trip_cash_usd):'Not available'}</strong><p>${hasTrip?'Flight + hotel cash outlay':hasKnown?'Known estimate — required fees unknown':'Flight or hotel results missing'}</p></div><div><small>ONE AWARD + CASH · SCENARIO ONLY</small><strong>${a?money(a.trip_cash_outlay_usd):'Not available'}</strong><p>${a?`Plus ${Number(a.points).toLocaleString()} points<br>Value of points used: ${money(Number(a.points)*data.query.point_value_cents/100)}<br>Total economic cost: <b>${money(a.trip_economic_cost_usd)}</b><br>${safe(a.kind)} award: ${safe(a.offer_id)}`:safe(unavailable)}</p></div></div><p><strong>${safe(verdict)}</strong></p>${a?'<p>Economic cost = cash paid + your value of points used. Availability and program eligibility are unverified.</p>':''}`;
-  el('recommendations').innerHTML=`<div class="reco-box"><h3>Your cash-versus-points comparison</h3>${comparison}${mode==='demo'?'':quoteComparisonForm(data)}<details class="wallet-comparison"><summary>Compare Chase, Amex & loyalty points for your selections</summary>${walletView}<p>Each balance is separate. Estimates on two cards do not confirm your wallet can pay for both.</p></details><details class="reasoning-details"><summary>How this comparison works</summary>${mode==='demo'?'<p>Demo award prices are provided separately from cash prices. Transfer requirements apply the displayed base rules, fictional bonuses, and rounding. Each payment row is an alternative; bank balances are not pooled.</p>':summary.recommendations.map(s=>`<p>${safe(s)}</p>`).join('') || '<p>No recommendation available. Try another search.</p>'}</details><p><strong>Before booking:</strong> Verify exact flights, room conditions, required fees, and award availability with the provider.</p></div>`;
+  el('recommendations').innerHTML=`<div class="reco-box"><h3>Your cash-versus-points comparison</h3>${comparison}${promotionLookupHtml()}${mode==='demo'?'':quoteComparisonForm(data)}<details class="wallet-comparison"><summary>Compare Chase, Amex & loyalty points for your selections</summary>${walletView}<p>Each balance is separate. Estimates on two cards do not confirm your wallet can pay for both.</p></details><details class="reasoning-details"><summary>How this comparison works</summary>${mode==='demo'?'<p>Demo award prices are provided separately from cash prices. Transfer requirements apply the displayed base rules, fictional bonuses, and rounding. Each payment row is an alternative; bank balances are not pooled.</p>':summary.recommendations.map(s=>`<p>${safe(s)}</p>`).join('') || '<p>No recommendation available. Try another search.</p>'}</details><p><strong>Before booking:</strong> Verify exact flights, room conditions, required fees, and award availability with the provider.</p></div>`;
 
+  el('promotionLookup').addEventListener('click',lookupPromotions);
   if(el('quoteForm'))el('quoteForm').addEventListener('submit',compareQuotedPrices);
 }
 async function chooseOffer(kind,id){

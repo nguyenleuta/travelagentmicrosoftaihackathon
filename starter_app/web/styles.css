@@ -15,3 +15,5 @@
 .quote-table{overflow-x:auto;margin:16px 0}.quote-table table{width:100%;border-collapse:collapse;font-size:12px;text-align:left}.quote-table th,.quote-table td{padding:12px;border-bottom:1px solid var(--border);vertical-align:top;min-width:145px}.quote-table th{background:#edf5f3}
 
 .demo-payments{margin:14px 0;padding:12px;background:#fff;border:1px solid var(--border);border-radius:10px}.demo-label{font-size:10px!important;font-weight:750;color:#886020;letter-spacing:.5px}.demo-payments summary{cursor:pointer;font-weight:700;font-size:12px;padding:8px 0;color:#285b45}.demo-payments .quote-table{margin:8px 0}.demo-payments .quote-table th,.demo-payments .quote-table td{min-width:105px;padding:8px}.demo-payments h4{margin:8px 0}.demo-payments p{font-size:12px;line-height:1.6}
+
+.public-offer{border-top:1px solid var(--border);padding:12px 0}.public-offer small{color:#78551c}.public-offer a{font-weight:700}.public-offer p{overflow-wrap:anywhere}
