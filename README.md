@@ -1,5 +1,7 @@
 # FareForge AI — Hackathon 03 Student Kit
 
+FareForge won **1st place in the Travel Agent track** and **3rd place overall** at the **Microsoft AI Agent Hackathon 2026**.
+
 ## Team plans
 
 - [Johnny: backend and integration](JOHNNY_PLAN.md)
